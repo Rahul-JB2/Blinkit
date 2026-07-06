@@ -89,6 +89,8 @@ fun HomeScreen(
     onNavigateToOrders: () -> Unit,
     onNavigateToAdmin: () -> Unit,
     onNavigateToChat: () -> Unit,
+    onNavigateToCategories: () -> Unit,
+    onNavigateToSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val selectedCategory by viewModel.selectedCategory.collectAsState()
@@ -123,8 +125,8 @@ fun HomeScreen(
     // Tab navigation side-effects
     LaunchedEffect(selectedTab) {
         when (selectedTab) {
-            1 -> gridState.animateScrollToItem(3) // categories section
-            2 -> { gridState.animateScrollToItem(0); searchFocusRequester.requestFocus() }
+            1 -> onNavigateToCategories()
+            2 -> onNavigateToSearch()
         }
     }
 

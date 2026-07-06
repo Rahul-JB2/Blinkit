@@ -31,590 +31,1667 @@ tailwind.config = {
 }
 </script>
 <style>
-  * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+  * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
   body { background: #F6F7F9; }
-  .dark body { background: #18181B; }
+  .dark body, .dark #app { background: #18181B; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  .ms { font-family: 'Material Symbols Outlined'; font-style: normal; font-size: 22px; line-height: 1; user-select: none; }
-  .badge { animation: badgePop .2s ease; }
+  .ms { font-family: 'Material Symbols Outlined'; font-style: normal; font-size: 22px; line-height: 1; user-select: none; display: inline-block; }
+
+  /* Screen transitions */
+  .screen { display: none; position: absolute; inset: 0; flex-direction: column; background: #F6F7F9; overflow: hidden; }
+  .dark .screen { background: #18181B; }
+  .screen.active { display: flex; }
+
+  /* Animations */
+  .screen-enter { animation: screenSlideIn .22s cubic-bezier(.25,.46,.45,.94); }
+  @keyframes screenSlideIn { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
   @keyframes badgePop { 0%{transform:scale(0)} 80%{transform:scale(1.2)} 100%{transform:scale(1)} }
-  .cart-bar-enter { animation: slideUp .3s cubic-bezier(.34,1.56,.64,1); }
   @keyframes slideUp { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
-  .btn-add { transition: all .15s; }
+  @keyframes fadeIn { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  @keyframes confettiFall { from{transform:translateY(-20px) rotate(0deg);opacity:1} to{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+  .badge-anim { animation: badgePop .2s ease; }
+  .cart-bar-enter { animation: slideUp .3s cubic-bezier(.34,1.56,.64,1); }
+  .fade-in { animation: fadeIn .18s ease; }
+
+  /* Cards */
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .dark .card { background: #27272A; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+
+  /* Nav bar */
+  .nav-bar { background: #fff; border-top: 1px solid #E4E4E7; }
+  .dark .nav-bar { background: #27272A; border-top-color: #3F3F46; }
+
+  /* Top bar */
+  .top-bar { background: #fff; border-bottom: 1px solid #E4E4E7; }
+  .dark .top-bar { background: #27272A; border-bottom-color: #3F3F46; }
+
+  /* Chip */
+  .chip { border: 1.5px solid #E4E4E7; border-radius: 999px; padding: 5px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; background: #fff; }
+  .dark .chip { background: #27272A; border-color: #3F3F46; color: #fff; }
+  .chip.active { background: #108A43; border-color: #108A43; color: #fff; }
+
+  /* Buttons */
+  .btn-primary { background: #108A43; color: #fff; border-radius: 14px; font-weight: 800; border: none; cursor: pointer; transition: background .15s, transform .1s; }
+  .btn-primary:active { transform: scale(.97); background: #076430; }
+  .btn-add { background: #108A43; color: #fff; border-radius: 8px; font-weight: 800; border: none; cursor: pointer; font-size: 12px; padding: 0 10px; height: 30px; transition: all .15s; }
   .btn-add:active { transform: scale(.92); }
-  .category-tile:hover { transform: scale(1.04); }
-  .category-tile { transition: transform .15s; }
-  .product-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.1); transform: translateY(-2px); }
-  .product-card { transition: all .2s; }
-  .banner-dot { transition: all .3s; }
-  .qty-row { animation: fadeIn .15s; }
-  @keyframes fadeIn { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
-  /* Dark mode */
-  .dark .surface-bg { background: #27272A; }
-  .dark .app-bg { background: #18181B; }
-  .dark .text-main { color: #FFFFFF; }
+  .btn-outline { border: 1.5px solid #E4E4E7; border-radius: 12px; background: transparent; cursor: pointer; padding: 0 16px; height: 40px; font-weight: 700; transition: all .15s; }
+  .dark .btn-outline { border-color: #3F3F46; color: #fff; }
+
+  /* Qty row */
+  .qty-row { background: #108A43; border-radius: 8px; height: 30px; display: flex; align-items: center; animation: fadeIn .15s; overflow: hidden; }
+  .qty-btn { width: 28px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-weight: 900; font-size: 16px; }
+  .qty-btn:active { background: rgba(255,255,255,.2); }
+  .qty-num { color: #fff; font-weight: 800; font-size: 13px; min-width: 20px; text-align: center; }
+
+  /* Product card hover */
+  .product-card { transition: all .2s; cursor: pointer; }
+  .product-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.12); transform: translateY(-2px); }
+
+  /* Category tile */
+  .cat-tile { transition: all .15s; cursor: pointer; }
+  .cat-tile:hover { transform: scale(1.04); }
+  .cat-tile.selected { outline: 2.5px solid #108A43; }
+
+  /* Search input */
+  .search-input { border: 1.5px solid #E4E4E7; border-radius: 999px; background: #F4F4F5; padding: 10px 16px 10px 44px; font-size: 14px; width: 100%; outline: none; transition: border .15s; }
+  .search-input:focus { border-color: #108A43; background: #fff; }
+  .dark .search-input { background: #3F3F46; border-color: #3F3F46; color: #fff; }
+  .dark .search-input:focus { border-color: #108A43; background: #27272A; }
+
+  /* Badge */
+  .cart-badge { position: absolute; top: -4px; right: -4px; background: #108A43; color: #fff; border-radius: 999px; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1F2937; color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
+  #toast.show { opacity: 1; }
+
+  /* Confetti */
+  .confetti-piece { position: absolute; width: 10px; height: 6px; border-radius: 2px; animation: confettiFall linear forwards; }
+
+  /* Progress bar */
+  .progress-track { background: #E4E4E7; border-radius: 999px; height: 6px; overflow: hidden; }
+  .dark .progress-track { background: #3F3F46; }
+  .progress-fill { background: #108A43; height: 100%; border-radius: 999px; transition: width .4s; }
+
+  /* Timeline */
+  .timeline-line { width: 2px; background: #E4E4E7; flex-shrink: 0; }
+  .dark .timeline-line { background: #3F3F46; }
+  .timeline-line.done { background: #108A43; }
+  .timeline-dot { width: 14px; height: 14px; border-radius: 999px; flex-shrink: 0; }
+  .timeline-dot.done { background: #108A43; }
+  .timeline-dot.pending { background: #E4E4E7; }
+  .dark .timeline-dot.pending { background: #3F3F46; }
+
+  /* Map canvas */
+  #trackingMap { width: 100%; height: 200px; background: #E2E8F0; border-radius: 16px; position: relative; overflow: hidden; }
+  .dark #trackingMap { background: #1E293B; }
+
+  /* Spinner */
+  .spinner { width: 40px; height: 40px; border: 4px solid #E4E4E7; border-top-color: #108A43; border-radius: 50%; animation: spin 1s linear infinite; }
+
+  /* Input field */
+  .field { border: 1.5px solid #E4E4E7; border-radius: 12px; padding: 12px 14px; font-size: 14px; width: 100%; outline: none; background: #fff; transition: border .15s; }
+  .field:focus { border-color: #108A43; }
+  .dark .field { background: #27272A; border-color: #3F3F46; color: #fff; }
+
+  /* Banner carousel */
+  .banner-track { display: flex; transition: transform .4s cubic-bezier(.25,.46,.45,.94); }
+  .banner-slide { min-width: 100%; }
+
+  /* Dark mode helpers */
+  .dark .text-main { color: #FAFAFA; }
   .dark .text-sub { color: #A1A1AA; }
+  .dark .bg-surface { background: #27272A; }
+  .dark .bg-surface-var { background: #3F3F46; }
   .dark .border-c { border-color: #3F3F46; }
-  .dark .nav-bg { background: #27272A; }
-  .dark .search-bg { background: #3F3F46; }
-  .dark .cat-tile { background: #27272A; }
-  @media (max-width: 430px) {
-    .desktop-hint { display: none; }
-  }
+  .dark .chip:not(.active) { color: #A1A1AA; }
+
+  /* Scrollable content */
+  .content-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .content-scroll::-webkit-scrollbar { display: none; }
 </style>
 </head>
-<body class="app-bg min-h-screen">
+<body>
+<div id="app" class="relative w-full h-full overflow-hidden" style="max-width:430px;margin:0 auto;height:100dvh;position:relative;">
 
-<!-- App Shell: phone frame on desktop -->
-<div class="min-h-screen flex items-start justify-center">
-  <div class="w-full max-w-[430px] relative pb-32">
-
-    <!-- ═══════════════════════════════════════
-         TOP BAR
-    ═══════════════════════════════════════ -->
-    <header class="sticky top-0 z-50 bg-surface dark:bg-[#27272A] shadow-sm">
-      <div class="flex items-center justify-between px-4 py-3">
-        <!-- Address block -->
-        <div class="flex items-start gap-1 cursor-pointer" onclick="showAddressSheet()">
-          <span class="ms text-[#108A43] text-[20px] mt-0.5">location_on</span>
-          <div>
-            <div class="flex items-center gap-0.5">
-              <span class="text-[15px] font-extrabold text-[#108A43]">Delivery in 10 Mins</span>
-              <span class="ms text-[#108A43] text-[18px]">arrow_drop_down</span>
-            </div>
-            <p class="text-[11px] text-[#71717A] dark:text-[#A1A1AA] max-w-[200px] truncate" id="address-subtitle">Add a delivery address</p>
-          </div>
-        </div>
-        <!-- Right icons -->
-        <div class="flex items-center gap-1">
-          <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700" onclick="toggleTheme()" title="Toggle theme">
-            <span class="ms text-[20px] text-[#71717A]" id="theme-icon">dark_mode</span>
-          </button>
-          <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700" title="Spin & Win">
-            <span class="ms text-[20px] text-[#F7C11E]">casino</span>
-          </button>
-          <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700" title="Orders">
-            <span class="ms text-[20px] text-[#71717A]">history</span>
-          </button>
-          <!-- Avatar -->
-          <div class="w-8 h-8 rounded-full bg-[#E6F5EC] flex items-center justify-center ml-1">
-            <span class="text-[13px] font-extrabold text-[#108A43]">U</span>
-          </div>
-        </div>
+<!-- ════════════════════════════════════════════
+     HOME SCREEN
+════════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <!-- Top bar -->
+  <div class="top-bar flex items-center px-4 py-3 gap-3 flex-shrink-0">
+    <div class="flex-1 cursor-pointer" onclick="showModal('addressModal')">
+      <div class="flex items-center gap-1">
+        <span class="ms text-brand" style="font-size:18px">location_on</span>
+        <span class="font-800 text-sm text-brand">Delivery in 10 Mins</span>
+        <span class="ms text-brand" style="font-size:16px">expand_more</span>
       </div>
-    </header>
+      <div class="text-xs text-gray-500 pl-6" id="homeAddr">Add a delivery address</div>
+    </div>
+    <button onclick="toggleDark()" class="w-9 h-9 rounded-full bg-surface-var flex items-center justify-center" title="Toggle dark">
+      <span class="ms text-gray-500" id="darkIcon" style="font-size:18px">dark_mode</span>
+    </button>
+    <button class="relative w-9 h-9 rounded-full bg-surface-var flex items-center justify-center" onclick="navigate('orders')">
+      <span class="ms text-gray-500" style="font-size:18px">receipt_long</span>
+    </button>
+    <button class="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-white font-800 text-sm">U</button>
+  </div>
 
-    <!-- ═══════════════════════════════════════
-         SEARCH BAR
-    ═══════════════════════════════════════ -->
-    <div class="px-4 py-3 sticky top-[64px] z-40 bg-[#F6F7F9] dark:bg-[#18181B]">
-      <div class="relative">
-        <span class="ms absolute left-4 top-1/2 -translate-y-1/2 text-[#108A43] text-[20px]">search</span>
-        <input id="search-input" type="text" placeholder="Search for groceries, snacks, milk..."
-          class="w-full h-12 pl-12 pr-10 rounded-full border border-[#E4E4E7] bg-white dark:bg-[#3F3F46] dark:border-zinc-600 dark:text-white text-[13px] outline-none focus:border-[#108A43] focus:ring-2 focus:ring-[#108A43]/20 transition-all search-bg"
-          oninput="filterProducts(this.value)"/>
-        <button id="clear-btn" class="hidden absolute right-3 top-1/2 -translate-y-1/2" onclick="clearSearch()">
-          <span class="ms text-[18px] text-gray-400">close</span>
-        </button>
+  <!-- Scrollable content -->
+  <div class="content-scroll">
+    <!-- Search bar -->
+    <div class="px-4 py-3">
+      <div class="relative" onclick="navigate('search')">
+        <span class="ms text-brand absolute left-3 top-1/2 -translate-y-1/2" style="font-size:20px">search</span>
+        <div class="search-input flex items-center text-gray-400 text-sm" style="cursor:pointer">Search for groceries, snacks, milk…</div>
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════
-         BANNER CAROUSEL
-    ═══════════════════════════════════════ -->
-    <section class="mt-1">
-      <div id="banner-track" class="flex overflow-x-auto no-scrollbar gap-3 px-4 snap-x snap-mandatory">
+    <!-- Active order banner -->
+    <div id="activeOrderBanner" class="hidden mx-4 mb-3 rounded-2xl p-3 flex items-center gap-3" style="background:linear-gradient(135deg,#108A43,#076430)">
+      <span class="ms text-white" style="font-size:24px">two_wheeler</span>
+      <div class="flex-1">
+        <div class="text-white font-800 text-sm">Order on the way!</div>
+        <div class="text-green-200 text-xs">Tap to track your rider live</div>
+      </div>
+      <button class="bg-white text-brand font-800 text-xs px-3 py-1.5 rounded-full" onclick="navigate('tracking')">Track</button>
+    </div>
 
-        <!-- Banner 1 -->
-        <div class="min-w-[300px] h-36 rounded-2xl relative overflow-hidden snap-center flex-shrink-0"
-             style="background: linear-gradient(135deg,#108A43,#064D26)">
-          <div class="absolute inset-0 p-5 flex flex-col justify-between">
-            <span class="text-white text-[11px] font-extrabold bg-white/20 rounded-md px-2 py-1 w-fit">⚡ 10 MINS DELIVERY</span>
-            <div>
-              <p class="text-white text-[20px] font-black leading-tight">Grab Fresh Groceries</p>
-              <p class="text-white/85 text-[12px] font-medium">Up to 30% OFF on farm-fresh veggies</p>
-            </div>
-          </div>
+    <!-- Banner carousel -->
+    <div class="mx-4 mb-4 rounded-2xl overflow-hidden" style="position:relative">
+      <div class="banner-track" id="bannerTrack">
+        <div class="banner-slide rounded-2xl p-5" style="background:linear-gradient(135deg,#108A43 0%,#076430 100%);min-height:120px">
+          <div class="inline-block bg-white/20 text-white text-xs font-700 px-2 py-1 rounded-full mb-2">⚡ 10 MINS DELIVERY</div>
+          <div class="text-white font-900 text-xl leading-tight">Grab Fresh Groceries</div>
+          <div class="text-green-200 text-sm mt-1">Up to 30% OFF on farm-fresh veggies</div>
         </div>
-
-        <!-- Banner 2 -->
-        <div class="min-w-[300px] h-36 rounded-2xl relative overflow-hidden snap-center flex-shrink-0"
-             style="background: linear-gradient(135deg,#5C35CC,#2E1A6E)">
-          <div class="absolute inset-0 p-5 flex flex-col justify-between">
-            <span class="text-white text-[11px] font-extrabold bg-white/20 rounded-md px-2 py-1 w-fit">🎉 MEGA BOGO</span>
-            <div>
-              <p class="text-white text-[20px] font-black leading-tight">Breakfast Festival</p>
-              <p class="text-white/85 text-[12px] font-medium">Buy 1 Get 1 FREE on Milk &amp; Eggs</p>
-            </div>
-          </div>
+        <div class="banner-slide rounded-2xl p-5" style="background:linear-gradient(135deg,#6B21A8 0%,#4C1D95 100%);min-height:120px">
+          <div class="inline-block bg-white/20 text-white text-xs font-700 px-2 py-1 rounded-full mb-2">🎉 MEGA BOGOF</div>
+          <div class="text-white font-900 text-xl leading-tight">Breakfast Essentials</div>
+          <div class="text-purple-200 text-sm mt-1">Buy 1 Get 1 FREE on milk & bread</div>
         </div>
-
-        <!-- Banner 3 -->
-        <div class="min-w-[300px] h-36 rounded-2xl relative overflow-hidden snap-center flex-shrink-0"
-             style="background: linear-gradient(135deg,#D97706,#92400E)">
-          <div class="absolute inset-0 p-5 flex flex-col justify-between">
-            <span class="text-white text-[11px] font-extrabold bg-white/20 rounded-md px-2 py-1 w-fit">🍿 CRUNCH FEST</span>
-            <div>
-              <p class="text-white text-[20px] font-black leading-tight">Snacks &amp; Munchies</p>
-              <p class="text-white/85 text-[12px] font-medium">Flat 20% OFF – use code SNACK20</p>
-            </div>
-          </div>
+        <div class="banner-slide rounded-2xl p-5" style="background:linear-gradient(135deg,#EA580C 0%,#C2410C 100%);min-height:120px">
+          <div class="inline-block bg-white/20 text-white text-xs font-700 px-2 py-1 rounded-full mb-2">🔥 HOT DEALS</div>
+          <div class="text-white font-900 text-xl leading-tight">Snack Attack Sale</div>
+          <div class="text-orange-200 text-sm mt-1">Flat ₹50 off on your first snack order</div>
         </div>
+      </div>
+      <div class="flex justify-center gap-1.5 pt-2 pb-1">
+        <div class="banner-dot w-5 h-1.5 rounded-full bg-brand" id="dot0"></div>
+        <div class="banner-dot w-1.5 h-1.5 rounded-full bg-gray-300" id="dot1"></div>
+        <div class="banner-dot w-1.5 h-1.5 rounded-full bg-gray-300" id="dot2"></div>
+      </div>
+    </div>
 
-      </div>
-      <!-- Dots -->
-      <div class="flex justify-center gap-1.5 mt-3">
-        <div id="dot-0" class="banner-dot h-1.5 w-5 rounded-full bg-[#108A43]"></div>
-        <div id="dot-1" class="banner-dot h-1.5 w-1.5 rounded-full bg-[#E4E4E7]"></div>
-        <div id="dot-2" class="banner-dot h-1.5 w-1.5 rounded-full bg-[#E4E4E7]"></div>
-      </div>
-    </section>
+    <!-- Shop by Category -->
+    <div class="px-4 mb-3 flex items-center justify-between">
+      <div class="font-800 text-base text-main">Shop by Category</div>
+      <button class="text-brand text-sm font-700 flex items-center gap-0.5" onclick="navigate('categories')">See All <span class="ms" style="font-size:16px">chevron_right</span></button>
+    </div>
+    <div class="px-4 grid grid-cols-4 gap-2 mb-4" id="homeCatGrid"></div>
 
-    <!-- ═══════════════════════════════════════
-         SHOP BY CATEGORY
-    ═══════════════════════════════════════ -->
-    <section class="px-4 mt-5">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-[17px] font-extrabold text-[#1F2937] dark:text-white">Shop by Category</h2>
-        <button class="text-[13px] font-semibold text-[#108A43] flex items-center gap-0.5" onclick="selectCategory('All')">
-          See All <span class="ms text-[15px]">chevron_right</span>
-        </button>
-      </div>
+    <!-- Filter chips -->
+    <div class="px-4 flex gap-2 overflow-x-auto no-scrollbar mb-4" id="homeFilterChips"></div>
 
-      <div class="grid grid-cols-4 gap-2" id="category-grid">
-        <!-- JS rendered -->
-      </div>
+    <!-- Bestsellers -->
+    <div class="px-4 mb-3 flex items-center justify-between">
+      <div class="font-800 text-base text-main">Bestsellers 🔥</div>
+      <button class="text-brand text-sm font-700 flex items-center gap-0.5">See All <span class="ms" style="font-size:16px">chevron_right</span></button>
+    </div>
+    <div class="px-4 grid grid-cols-2 gap-3 mb-32" id="homeProductGrid"></div>
+  </div>
 
-      <!-- Filter chips -->
-      <div class="flex gap-2 overflow-x-auto no-scrollbar mt-3 pb-1" id="chip-row">
-        <!-- JS rendered -->
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════
-         BESTSELLERS
-    ═══════════════════════════════════════ -->
-    <section class="px-4 mt-5">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-[17px] font-extrabold text-[#1F2937] dark:text-white">Bestsellers 🔥</h2>
-        <button class="text-[13px] font-semibold text-[#108A43] flex items-center gap-0.5">
-          See All <span class="ms text-[15px]">chevron_right</span>
-        </button>
-      </div>
-      <div class="grid grid-cols-2 gap-3" id="products-grid">
-        <!-- JS rendered -->
-      </div>
-      <div id="empty-state" class="hidden flex flex-col items-center py-16 text-center">
-        <span class="text-5xl mb-3">😔</span>
-        <p class="text-[15px] font-extrabold text-[#1F2937] dark:text-white">No products found</p>
-        <p class="text-[13px] text-[#71717A]">Try a different category or search term.</p>
-      </div>
-    </section>
-
-  </div><!-- /app shell -->
+  <!-- Bottom nav -->
+  <div id="homeNav" class="nav-bar flex-shrink-0"></div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     FLOATING CART BAR
-═══════════════════════════════════════ -->
-<div id="cart-bar" class="hidden fixed z-50 left-0 right-0 px-4"
-     style="bottom: 68px">
-  <div class="cart-bar-enter max-w-[430px] mx-auto bg-[#108A43] rounded-2xl shadow-2xl px-5 py-3.5 flex items-center justify-between cursor-pointer"
-       onclick="openCart()">
-    <div class="flex items-center gap-3">
-      <div class="relative">
-        <span class="ms text-white text-[26px]">shopping_basket</span>
-        <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#F7C11E] flex items-center justify-center">
-          <span id="cart-badge" class="text-[9px] font-black text-black">0</span>
-        </div>
-      </div>
-      <div>
-        <p id="cart-summary" class="text-white text-[14px] font-extrabold">0 items · ₹0.00</p>
-        <p class="text-white/80 text-[10px]">Free delivery applied 🎉</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-0.5 text-white text-[14px] font-extrabold">
-      View Cart <span class="ms text-[20px]">chevron_right</span>
+<!-- ════════════════════════════════════════════
+     CATEGORIES SCREEN
+════════════════════════════════════════════ -->
+<div id="screen-categories" class="screen">
+  <!-- Top bar -->
+  <div class="top-bar flex items-center px-2 py-3 gap-2 flex-shrink-0">
+    <button class="w-10 h-10 flex items-center justify-center rounded-full" onclick="navigate('home')">
+      <span class="ms text-main" style="font-size:22px">arrow_back</span>
+    </button>
+    <div class="font-800 text-lg flex-1 text-main">All Categories</div>
+    <button class="relative w-10 h-10 flex items-center justify-center" onclick="navigate('cart')">
+      <span class="ms text-main" style="font-size:22px">shopping_cart</span>
+      <div class="cart-badge" id="catCartBadge" style="display:none"></div>
+    </button>
+  </div>
+
+  <!-- Search within categories -->
+  <div class="px-4 py-3 flex-shrink-0 top-bar">
+    <div class="relative">
+      <span class="ms text-brand absolute left-3 top-1/2 -translate-y-1/2" style="font-size:20px">search</span>
+      <input id="catSearchInput" class="search-input" placeholder="Search in all categories…" oninput="renderCatProducts()" style="padding-left:44px"/>
     </div>
   </div>
+
+  <div class="content-scroll">
+    <!-- Category list -->
+    <div class="px-4 pt-3 pb-1">
+      <div class="font-800 text-sm text-sub mb-3 uppercase tracking-wide">Browse by Category</div>
+      <div id="catList" class="flex flex-col gap-2"></div>
+    </div>
+
+    <!-- Products for selected category -->
+    <div id="catProductsSection" class="px-4 pt-4 pb-28">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-800 text-base text-main" id="catProductsTitle">All Products</div>
+        <div class="bg-brand-light text-brand-dark text-xs font-700 px-3 py-1 rounded-full" id="catProductsCount"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3" id="catProductGrid"></div>
+    </div>
+  </div>
+
+  <div class="nav-bar flex-shrink-0" id="catNav"></div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     BOTTOM NAV
-═══════════════════════════════════════ -->
-<nav class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#27272A] border-t border-[#E4E4E7] dark:border-zinc-700 shadow-lg nav-bg">
-  <div class="max-w-[430px] mx-auto flex justify-around items-center py-2 px-2">
+<!-- ════════════════════════════════════════════
+     SEARCH SCREEN
+════════════════════════════════════════════ -->
+<div id="screen-search" class="screen">
+  <!-- Top bar with search -->
+  <div class="top-bar flex items-center px-2 py-3 gap-2 flex-shrink-0">
+    <button class="w-10 h-10 flex items-center justify-center rounded-full" onclick="navigate('home')">
+      <span class="ms text-main" style="font-size:22px">arrow_back</span>
+    </button>
+    <div class="relative flex-1">
+      <span class="ms text-brand absolute left-3 top-1/2 -translate-y-1/2" style="font-size:20px">search</span>
+      <input id="searchInput" class="search-input" placeholder="Search groceries, brands…" oninput="renderSearchResults()" style="padding-left:44px" autocomplete="off"/>
+      <button id="searchClearBtn" class="absolute right-3 top-1/2 -translate-y-1/2 hidden" onclick="clearSearch()">
+        <span class="ms text-gray-400" style="font-size:18px">close</span>
+      </button>
+    </div>
+  </div>
 
-    <button class="flex flex-col items-center gap-0.5 px-4 py-1 rounded-full" id="tab-home" onclick="selectTab('home')">
-      <div class="flex items-center justify-center w-10 h-6 rounded-full bg-[#E6F5EC]">
-        <span class="ms text-[#108A43]" style="font-variation-settings:'FILL' 1">home</span>
+  <div class="content-scroll pb-28">
+    <!-- Recent searches (shown when query empty) -->
+    <div id="searchIdle">
+      <div class="px-4 pt-4 pb-2">
+        <div class="font-800 text-sm text-sub mb-3 uppercase tracking-wide">Recent Searches</div>
+        <div class="flex flex-wrap gap-2" id="recentChips"></div>
       </div>
-      <span class="text-[10px] font-semibold text-[#108A43]">Home</span>
-    </button>
+      <div class="px-4 pt-3 pb-2">
+        <div class="font-800 text-base text-main mb-3">Popular Right Now 🔥</div>
+        <div class="grid grid-cols-2 gap-3" id="popularGrid"></div>
+      </div>
+    </div>
 
-    <button class="flex flex-col items-center gap-0.5 px-4 py-1" id="tab-categories" onclick="selectTab('categories')">
-      <span class="ms text-[#71717A]">grid_view</span>
-      <span class="text-[10px] font-semibold text-[#71717A]">Categories</span>
-    </button>
+    <!-- Search results -->
+    <div id="searchResults" class="hidden">
+      <div class="px-4 pt-4 pb-2 flex items-center justify-between">
+        <div class="font-800 text-base text-main" id="searchResultsTitle">Results</div>
+        <div class="bg-brand-light text-brand-dark text-xs font-700 px-3 py-1 rounded-full" id="searchResultsCount"></div>
+      </div>
+      <div id="searchResultsEmpty" class="hidden flex flex-col items-center py-16 px-8 text-center">
+        <div style="font-size:56px">🔍</div>
+        <div class="font-800 text-lg text-main mt-4" id="searchEmptyTitle">No results</div>
+        <div class="text-sub text-sm mt-2">Try a different spelling or browse categories</div>
+      </div>
+      <div class="px-4 grid grid-cols-2 gap-3" id="searchResultsGrid"></div>
+    </div>
+  </div>
 
-    <button class="flex flex-col items-center gap-0.5 px-4 py-1" id="tab-search" onclick="selectTab('search')">
-      <span class="ms text-[#71717A]">search</span>
-      <span class="text-[10px] font-semibold text-[#71717A]">Search</span>
-    </button>
+  <div class="nav-bar flex-shrink-0" id="searchNav"></div>
+</div>
 
-    <button class="flex flex-col items-center gap-0.5 px-4 py-1 relative" id="tab-cart" onclick="openCart()">
-      <div class="relative">
-        <span class="ms text-[#71717A]">shopping_cart</span>
-        <div id="nav-cart-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#108A43] flex items-center justify-center">
-          <span id="nav-cart-count" class="text-[9px] font-black text-white">0</span>
+<!-- ════════════════════════════════════════════
+     CART SCREEN
+════════════════════════════════════════════ -->
+<div id="screen-cart" class="screen">
+  <div class="top-bar flex items-center px-2 py-3 gap-2 flex-shrink-0">
+    <button class="w-10 h-10 flex items-center justify-center rounded-full" onclick="navigate('home')">
+      <span class="ms text-main" style="font-size:22px">arrow_back</span>
+    </button>
+    <div class="font-800 text-lg flex-1 text-main">Checkout basket</div>
+    <div class="bg-brand-light text-brand-dark text-xs font-700 px-3 py-1 rounded-full" id="cartItemCountBadge"></div>
+  </div>
+
+  <div class="content-scroll pb-4">
+    <!-- Empty state -->
+    <div id="cartEmpty" class="hidden flex flex-col items-center justify-center h-full py-20 px-8 text-center">
+      <div style="font-size:80px">🛒</div>
+      <div class="font-800 text-xl text-main mt-5">Your basket is empty!</div>
+      <div class="text-sub text-sm mt-2 leading-relaxed">Fill it with fresh fruits, delicious snacks, and daily essentials from QuickMart.</div>
+      <button class="btn-primary mt-7 px-8 h-12 text-sm flex items-center gap-2" onclick="navigate('home')">
+        <span class="ms" style="font-size:18px">shopping_bag</span> Start Shopping
+      </button>
+    </div>
+
+    <!-- Cart content -->
+    <div id="cartContent">
+      <!-- Free delivery progress -->
+      <div id="freeDeliveryBanner" class="mx-4 mt-4 rounded-2xl p-4 card"></div>
+
+      <!-- Items -->
+      <div class="px-4 mt-4">
+        <div class="font-800 text-sm text-sub uppercase tracking-wide mb-3">Review Items</div>
+        <div id="cartItemsList" class="flex flex-col gap-3"></div>
+      </div>
+
+      <!-- Recommendations -->
+      <div id="recoSection" class="mt-4 px-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="ms" style="font-size:18px;color:#F7C11E">auto_awesome</span>
+          <div class="font-800 text-sm text-main">Smart Recommendations</div>
+        </div>
+        <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1" id="recoList"></div>
+      </div>
+
+      <!-- Coupon -->
+      <div class="mx-4 mt-4 card p-4">
+        <div class="font-800 text-sm text-main mb-3 flex items-center gap-2">
+          <span class="ms text-brand" style="font-size:18px">confirmation_number</span>
+          Coupons & Discounts
+        </div>
+        <div id="couponApplied" class="hidden bg-brand-light rounded-xl px-3 py-2 flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2 text-brand font-700 text-sm" id="couponAppliedText"></div>
+          <button class="text-red-500 font-700 text-xs" onclick="removeCoupon()">REMOVE</button>
+        </div>
+        <div id="couponInput" class="flex gap-2">
+          <input id="couponField" class="field flex-1 text-sm" placeholder="Enter coupon (e.g. AI3DPROMO)" style="height:44px;border-radius:12px"/>
+          <button class="btn-primary px-4 text-sm font-800" style="height:44px;border-radius:12px" onclick="applyCoupon()">APPLY</button>
+        </div>
+        <div id="couponError" class="hidden text-red-500 text-xs mt-1.5 font-600">Invalid code! Try <strong>AI3DPROMO</strong></div>
+      </div>
+
+      <!-- Bill details -->
+      <div class="mx-4 mt-4 card p-4">
+        <div class="font-800 text-sm text-main mb-4">Bill Details</div>
+        <div class="flex flex-col gap-3 text-sm">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2 text-sub"><span class="ms" style="font-size:16px">receipt_long</span>Item Subtotal</div>
+            <div class="font-700 text-main" id="billSubtotal">₹0.00</div>
+          </div>
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2 text-sub"><span class="ms" style="font-size:16px">delivery_dining</span>Delivery Charges</div>
+            <div class="font-700" id="billDelivery">₹25.00</div>
+          </div>
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2 text-sub"><span class="ms" style="font-size:16px">info</span>Handling & Packing</div>
+            <div class="font-700 text-main" id="billHandling">₹5.00</div>
+          </div>
+          <div id="discountRow" class="hidden flex justify-between items-center">
+            <div class="flex items-center gap-2 text-brand"><span class="ms" style="font-size:16px">confirmation_number</span>Promo Discount</div>
+            <div class="font-700 text-brand" id="billDiscount">-₹0</div>
+          </div>
+          <div class="border-t pt-3 border-c flex justify-between items-center">
+            <div class="font-800 text-main">Grand Total</div>
+            <div class="font-900 text-brand text-lg" id="billTotal">₹0.00</div>
+          </div>
         </div>
       </div>
-      <span class="text-[10px] font-semibold text-[#71717A]">Cart</span>
-    </button>
 
+      <!-- Address -->
+      <div class="mx-4 mt-4 card p-4 flex items-center gap-3 cursor-pointer" onclick="showModal('addressModal')">
+        <span class="ms text-brand" style="font-size:22px">location_on</span>
+        <div class="flex-1">
+          <div class="font-800 text-sm text-main" id="cartAddrLabel">Add Address</div>
+          <div class="text-xs text-sub" id="cartAddrLine">Setup your delivery location</div>
+        </div>
+        <div class="text-brand font-800 text-xs">CHANGE</div>
+      </div>
+
+      <div class="h-36"></div>
+    </div>
   </div>
-</nav>
 
-<!-- ═══════════════════════════════════════
-     CART MODAL
-═══════════════════════════════════════ -->
-<div id="cart-modal" class="hidden fixed inset-0 z-[100] flex items-end justify-center bg-black/40">
-  <div class="w-full max-w-[430px] bg-white dark:bg-[#27272A] rounded-t-3xl max-h-[80vh] overflow-y-auto shadow-2xl">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-[#E4E4E7] dark:border-zinc-700">
-      <h2 class="text-[17px] font-extrabold text-[#1F2937] dark:text-white">Your Cart 🛒</h2>
-      <button onclick="closeCart()"><span class="ms text-[#71717A]">close</span></button>
-    </div>
-    <div id="cart-items-list" class="px-4 py-3 space-y-3">
-      <p class="text-center text-[#71717A] py-8">Your cart is empty</p>
-    </div>
-    <div id="cart-footer" class="hidden px-5 py-4 border-t border-[#E4E4E7] dark:border-zinc-700">
-      <div class="flex justify-between mb-2">
-        <span class="text-[13px] text-[#71717A]">Subtotal</span>
-        <span class="text-[13px] font-bold text-[#1F2937] dark:text-white" id="cart-subtotal">₹0</span>
+  <!-- Checkout bottom bar -->
+  <div id="cartCheckoutBar" class="hidden nav-bar px-4 py-4">
+    <button class="btn-primary w-full h-14 flex items-center justify-between px-5" onclick="navigate('payment')">
+      <div class="text-left">
+        <div class="font-900 text-base" id="checkoutTotal">₹0</div>
+        <div class="text-white/80 text-xs font-700">TOTAL BILL</div>
       </div>
-      <div class="flex justify-between mb-3">
-        <span class="text-[13px] text-[#71717A]">Delivery</span>
-        <span class="text-[13px] font-bold text-[#108A43]">FREE</span>
-      </div>
-      <button class="w-full bg-[#108A43] text-white font-extrabold text-[15px] py-3.5 rounded-xl">
+      <div class="flex items-center gap-2 font-800">
         Proceed to Payment
+        <span class="ms" style="font-size:18px">payment</span>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     ORDERS SCREEN
+════════════════════════════════════════════ -->
+<div id="screen-orders" class="screen">
+  <div class="top-bar flex items-center px-2 py-3 gap-2 flex-shrink-0">
+    <button class="w-10 h-10 flex items-center justify-center rounded-full" onclick="navigate('home')">
+      <span class="ms text-main" style="font-size:22px">arrow_back</span>
+    </button>
+    <div class="font-800 text-lg flex-1 text-main">Your Orders</div>
+    <div class="bg-brand-light text-brand-dark text-xs font-700 px-3 py-1 rounded-full" id="orderCountBadge"></div>
+  </div>
+
+  <div class="content-scroll px-4 py-4 pb-8">
+    <div id="ordersEmpty" class="hidden flex flex-col items-center justify-center py-20 text-center">
+      <div style="font-size:80px">🛍️</div>
+      <div class="font-800 text-xl text-main mt-5">No orders yet!</div>
+      <div class="text-sub text-sm mt-2 px-8 leading-relaxed">Your completed and active orders will appear here. Start stocking your pantry today!</div>
+      <button class="btn-primary mt-7 px-8 h-12 text-sm flex items-center gap-2" onclick="navigate('home')">
+        <span class="ms" style="font-size:18px">shopping_bag</span> Start Shopping
+      </button>
+    </div>
+    <div id="ordersList" class="flex flex-col gap-3"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TRACKING SCREEN
+════════════════════════════════════════════ -->
+<div id="screen-tracking" class="screen">
+  <div class="top-bar flex items-center px-2 py-3 gap-2 flex-shrink-0">
+    <button class="w-10 h-10 flex items-center justify-center rounded-full" onclick="navigate('home')">
+      <span class="ms text-main" style="font-size:22px">close</span>
+    </button>
+    <div class="font-800 text-lg flex-1 text-main">Live Delivery Tracker</div>
+    <div class="bg-brand text-white text-xs font-800 px-3 py-1 rounded-full flex items-center gap-1">
+      <div style="width:6px;height:6px;background:#4ADE80;border-radius:50%;animation:pulse 1.5s infinite"></div> LIVE
+    </div>
+    <button class="w-10 h-10 flex items-center justify-center" onclick="navigate('home')">
+      <span class="ms text-sub" style="font-size:22px">home</span>
+    </button>
+  </div>
+
+  <div class="content-scroll">
+    <!-- Map -->
+    <div class="mx-4 mt-4">
+      <div id="trackingMap" class="rounded-2xl relative overflow-hidden" style="height:200px">
+        <canvas id="mapCanvas" style="width:100%;height:100%"></canvas>
+        <!-- ETA badge -->
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-brand text-white px-4 py-1.5 rounded-full text-xs font-800 flex items-center gap-1.5 shadow-lg">
+          <span class="ms" style="font-size:14px;color:white">timer</span>
+          <span id="etaText">Arriving in 8 Mins</span>
+        </div>
+        <!-- Map controls -->
+        <div class="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+          <button class="w-8 h-8 card flex items-center justify-center text-main font-900 text-lg" onclick="adjustZoom(1)">+</button>
+          <button class="w-8 h-8 card flex items-center justify-center text-main font-900 text-lg" onclick="adjustZoom(-1)">−</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rider card -->
+    <div class="mx-4 mt-4 rounded-2xl p-4 flex items-center gap-3" style="background:#E6F5EC">
+      <div class="w-12 h-12 rounded-full bg-brand flex items-center justify-center flex-shrink-0">
+        <span class="ms text-white" style="font-size:22px">person</span>
+      </div>
+      <div class="flex-1">
+        <div class="font-800 text-main text-sm" id="riderName">Rahul Kumar</div>
+        <div class="text-sub text-xs" id="riderStatus">Rider is 1.2 km away</div>
+      </div>
+      <div class="flex gap-2">
+        <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm">
+          <span class="ms text-brand" style="font-size:18px">call</span>
+        </button>
+        <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm">
+          <span class="ms text-brand" style="font-size:18px">chat</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Firebase terminal log (collapsed) -->
+    <div class="mx-4 mt-3 rounded-2xl overflow-hidden" style="background:#1E293B" id="terminalBox">
+      <div class="flex items-center justify-between p-3 cursor-pointer" onclick="toggleTerminal()">
+        <div class="flex items-center gap-2">
+          <span class="ms text-brand" style="font-size:16px">wifi_tethering</span>
+          <span class="text-white font-700 text-xs">Firebase Live Connection Status</span>
+        </div>
+        <div class="bg-green-500/20 text-green-400 text-xs font-800 px-2 py-0.5 rounded flex items-center gap-1">
+          <div style="width:5px;height:5px;background:#4ADE80;border-radius:50%"></div> CONNECTED
+        </div>
+      </div>
+      <div id="terminalLogs" class="hidden px-3 pb-3">
+        <div class="bg-black rounded-lg p-2 text-xs font-mono space-y-1" style="max-height:100px;overflow-y:auto">
+          <div class="text-green-400">[12:00:01] Realtime listener attached @ orders/usr_123</div>
+          <div class="text-green-400">[12:00:02] trackingProgress: 0.42 received</div>
+          <div class="text-green-400">[12:00:03] riderLat: 12.9341, riderLng: 77.6201</div>
+          <div class="text-green-400">[12:00:04] ETA updated: 8 mins</div>
+          <div class="text-yellow-400">[12:00:05] Sync heartbeat OK • Latency: 24ms</div>
+        </div>
+        <div class="text-gray-500 text-xs text-right mt-1">Latency: 24ms • REST fallback: active</div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="mx-4 mt-4 card p-4 mb-28">
+      <div class="font-800 text-sm text-main mb-4">Delivery Milestones</div>
+      <div id="deliveryTimeline" class="flex flex-col gap-0"></div>
+
+      <!-- Delivering to -->
+      <div class="mt-4 bg-surface-var dark:bg-opacity-50 rounded-xl p-3 flex items-center gap-3">
+        <span class="ms text-brand" style="font-size:20px">location_on</span>
+        <div>
+          <div class="font-800 text-xs text-main">Delivering to Address</div>
+          <div class="text-xs text-sub" id="trackingAddr">123 Main Street, Bengaluru</div>
+        </div>
+      </div>
+
+      <button class="btn-primary w-full mt-4 h-12 text-sm font-800" onclick="navigate('home')">
+        Back to Shopping
       </button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     ADDRESS MODAL
-═══════════════════════════════════════ -->
-<div id="address-modal" class="hidden fixed inset-0 z-[100] flex items-end justify-center bg-black/40">
-  <div class="w-full max-w-[430px] bg-white dark:bg-[#27272A] rounded-t-3xl shadow-2xl px-5 py-5">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-[17px] font-extrabold text-[#1F2937] dark:text-white">Delivery Address 📍</h2>
-      <button onclick="closeAddressSheet()"><span class="ms text-[#71717A]">close</span></button>
-    </div>
-    <div class="space-y-3">
-      <div class="flex items-center gap-3 p-3 rounded-xl border-2 border-[#108A43] bg-[#E6F5EC] cursor-pointer">
-        <span class="ms text-[#108A43]">home</span>
-        <div>
-          <p class="text-[14px] font-bold text-[#1F2937]">Home</p>
-          <p class="text-[12px] text-[#71717A]">B-42, Silicon Heights, Sector 62</p>
-        </div>
-        <span class="ms text-[#108A43] ml-auto">check_circle</span>
-      </div>
-      <div class="flex items-center gap-3 p-3 rounded-xl border border-[#E4E4E7] cursor-pointer"
-           onclick="selectAddress('Office','Block A, Cyber Park, Sector 44')">
-        <span class="ms text-[#71717A]">work</span>
-        <div>
-          <p class="text-[14px] font-bold text-[#1F2937]">Office</p>
-          <p class="text-[12px] text-[#71717A]">Block A, Cyber Park, Sector 44</p>
-        </div>
-      </div>
-      <button class="w-full mt-2 border border-dashed border-[#108A43] text-[#108A43] font-semibold text-[13px] py-3 rounded-xl flex items-center justify-center gap-1">
-        <span class="ms text-[18px]">add</span> Add New Address
-      </button>
+<!-- ════════════════════════════════════════════
+     PAYMENT SCREEN
+════════════════════════════════════════════ -->
+<div id="screen-payment" class="screen">
+  <div class="top-bar flex items-center px-2 py-3 gap-2 flex-shrink-0">
+    <button class="w-10 h-10 flex items-center justify-center rounded-full" id="payBackBtn" onclick="navigate('cart')">
+      <span class="ms text-main" style="font-size:22px">arrow_back</span>
+    </button>
+    <div class="flex items-center gap-1.5 flex-1">
+      <span class="ms text-brand" style="font-size:18px">https</span>
+      <div class="font-800 text-base text-main">Secure Payment Gateway</div>
     </div>
   </div>
+
+  <!-- Payment selection -->
+  <div id="paymentSelection" class="content-scroll px-4 py-4 pb-4">
+    <!-- Amount box -->
+    <div class="rounded-2xl p-4 mb-5" style="background:#E6F5EC">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-brand font-700 text-xs">Amount to Pay</div>
+          <div class="font-900 text-2xl text-main" id="payAmount">₹0</div>
+        </div>
+        <span class="ms text-brand" style="font-size:36px">shield</span>
+      </div>
+    </div>
+    <div class="font-800 text-sm text-main mb-3">Select Payment Method</div>
+
+    <!-- UPI -->
+    <div class="card p-4 mb-3 cursor-pointer border-2" id="upiMethodCard" onclick="selectMethod('UPI')" style="border-color:#108A43">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="ms text-brand" style="font-size:22px">qr_code</span>
+          <div class="font-800 text-sm text-main">UPI Apps (Auto-detect)</div>
+        </div>
+        <span class="ms text-brand" style="font-size:20px">radio_button_checked</span>
+      </div>
+      <div id="upiApps" class="mt-3 flex flex-col gap-2">
+        <div class="flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer upi-app-row" data-app="Google Pay" onclick="selectUpiApp('Google Pay',event)" style="background:#E6F5EC;border:1.5px solid #108A43">
+          <div class="flex items-center gap-2"><span class="ms text-brand" style="font-size:18px">account_balance_wallet</span><span class="font-700 text-sm text-main">Google Pay</span></div>
+          <span class="ms text-brand" style="font-size:18px">radio_button_checked</span>
+        </div>
+        <div class="flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer upi-app-row" data-app="PhonePe" onclick="selectUpiApp('PhonePe',event)">
+          <div class="flex items-center gap-2"><span class="ms text-sub" style="font-size:18px">account_balance_wallet</span><span class="font-700 text-sm text-main">PhonePe</span></div>
+          <span class="ms text-sub" style="font-size:18px">radio_button_unchecked</span>
+        </div>
+        <div class="flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer upi-app-row" data-app="Paytm" onclick="selectUpiApp('Paytm',event)">
+          <div class="flex items-center gap-2"><span class="ms text-sub" style="font-size:18px">account_balance_wallet</span><span class="font-700 text-sm text-main">Paytm</span></div>
+          <span class="ms text-sub" style="font-size:18px">radio_button_unchecked</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card -->
+    <div class="card p-4 mb-3 cursor-pointer border-2 border-transparent" id="cardMethodCard" onclick="selectMethod('CARD')">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3"><span class="ms text-sub" style="font-size:22px">credit_card</span><div class="font-800 text-sm text-main">Credit or Debit Card</div></div>
+        <span class="ms text-sub" id="cardRadio" style="font-size:20px">radio_button_unchecked</span>
+      </div>
+    </div>
+
+    <!-- COD -->
+    <div class="card p-4 mb-4 cursor-pointer border-2 border-transparent" id="codMethodCard" onclick="selectMethod('COD')">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3"><span class="ms text-sub" style="font-size:22px">payments</span><div class="font-800 text-sm text-main">Cash on Delivery (COD)</div></div>
+        <span class="ms text-sub" id="codRadio" style="font-size:20px">radio_button_unchecked</span>
+      </div>
+    </div>
+
+    <button id="payProceedBtn" class="btn-primary w-full h-14 text-sm font-800" onclick="proceedPayment()">Pay Securely</button>
+    <div class="flex items-center justify-center gap-1.5 mt-3 text-xs text-sub">
+      <span class="ms" style="font-size:14px">shield</span>PCI-DSS Compliant • 256-bit SSL Encrypted
+    </div>
+  </div>
+
+  <!-- Processing state -->
+  <div id="paymentProcessing" class="hidden flex flex-col items-center justify-center flex-1 px-8 text-center gap-6">
+    <div class="spinner"></div>
+    <div class="text-brand font-800 text-xs tracking-widest uppercase">SECURE TRANSACTION</div>
+    <div class="font-700 text-sm text-main" id="processingStep">Establishing secure connection…</div>
+    <div class="flex items-center gap-1.5 text-xs text-sub"><span class="ms" style="font-size:14px">shield</span>PCI-DSS Compliant Gateway</div>
+  </div>
+
+  <!-- Success state -->
+  <div id="paymentSuccess" class="hidden content-scroll flex flex-col items-center justify-center px-6 text-center py-12 relative overflow-hidden">
+    <div id="confettiContainer" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+    <div class="w-28 h-28 rounded-full flex items-center justify-center mb-6" style="background:#E6F5EC">
+      <span class="ms text-brand" style="font-size:72px;font-variation-settings:'FILL' 1">check_circle</span>
+    </div>
+    <div class="font-900 text-2xl text-brand">Order Placed!</div>
+    <div class="text-sub text-sm mt-2 leading-relaxed">Your grocery payment is confirmed securely. Store accepted and packing has started!</div>
+    <div class="card w-full mt-6 p-4 text-sm">
+      <div class="flex justify-between mb-2"><span class="text-sub">Estimated Delivery</span><span class="font-800 text-brand">10 – 12 Mins</span></div>
+      <div class="flex justify-between"><span class="text-sub">Delivering to</span><span class="font-800 text-main" id="successAddr">Home</span></div>
+    </div>
+    <button class="btn-primary w-full mt-6 h-14 text-sm font-800 flex items-center justify-center gap-2" onclick="goToTracking()">
+      <span class="ms" style="font-size:18px">two_wheeler</span>Track Live Delivery
+    </button>
+  </div>
 </div>
+
+<!-- ════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════ -->
+<!-- Address modal -->
+<div id="addressModal" class="fixed inset-0 z-50 flex items-end hidden" style="background:rgba(0,0,0,.5)">
+  <div class="bg-white dark:bg-zinc-800 w-full rounded-t-3xl p-5 pb-8" style="max-height:80vh;overflow-y:auto">
+    <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+    <div class="font-800 text-lg text-main mb-4">Your Addresses</div>
+    <div id="addressList" class="flex flex-col gap-3 mb-4"></div>
+    <div class="font-700 text-sm text-main mb-2">Add New Address</div>
+    <input id="addrLabel" class="field text-sm mb-2" placeholder="Label (Home / Work)" style="height:44px"/>
+    <input id="addrLine" class="field text-sm mb-2" placeholder="Street address" style="height:44px"/>
+    <input id="addrArea" class="field text-sm mb-3" placeholder="Area / Landmark" style="height:44px"/>
+    <button class="btn-primary w-full h-12 text-sm" onclick="addAddress()">Save Address</button>
+    <button class="w-full mt-2 h-12 btn-outline text-sm text-sub" onclick="hideModal('addressModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
 
 <script>
-// ─── DATA ────────────────────────────────────────────────────
-const CATEGORIES = [
-  { name:'Fruits & Veg',    emoji:'🥦', bg:'#E8F5E9' },
-  { name:'Dairy & Eggs',    emoji:'🥛', bg:'#E3F2FD' },
-  { name:'Snacks',          emoji:'🍿', bg:'#FFF3E0' },
-  { name:'Meat & Fish',     emoji:'🥩', bg:'#FFEBEE' },
-  { name:'Bakery',          emoji:'🥐', bg:'#F3E5F5' },
-  { name:'Beverages',       emoji:'🧃', bg:'#E0F7FA' },
-  { name:'Personal Care',   emoji:'🧴', bg:'#FCE4EC' },
-  { name:'Staples',         emoji:'🌾', bg:'#F9FBE7' },
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+const CATS = [
+  { name:'Fruits & Vegetables', emoji:'🥦', bg:'#E8F5E9' },
+  { name:'Dairy, Bread & Eggs',  emoji:'🥛', bg:'#E3F2FD' },
+  { name:'Munchies & Snacks',   emoji:'🍿', bg:'#FFF3E0' },
+  { name:'Cold Drinks & Juices',emoji:'🧃', bg:'#E0F7FA' },
+  { name:'Instant Foods',       emoji:'🍜', bg:'#F9FBE7' },
+  { name:'Meat & Fish',         emoji:'🍖', bg:'#FFEBEE' },
+  { name:'Bakery',              emoji:'🥐', bg:'#F3E5F5' },
+  { name:'Personal Care',       emoji:'🧴', bg:'#FCE4EC' },
 ];
+
+const RECENT = ['Fresh Milk','Bananas','Bread','Eggs','Orange Juice','Chips'];
 
 const PRODUCTS = [
-  { id:1, name:'Fresh Banana – Robusta',    cat:'Fruits & Veg',  price:49,  original:0,   weight:'500 g',  badge:'MUST BUY', badgeCls:'bg-green-100 text-green-700',   emoji:'🍌' },
-  { id:2, name:'Full Cream Fresh Milk',     cat:'Dairy & Eggs',  price:72,  original:80,  weight:'1 L',    badge:'OFFER',    badgeCls:'bg-red-100 text-red-600',       emoji:'🥛' },
-  { id:3, name:'Whole Wheat Bread',         cat:'Bakery',        price:38,  original:45,  weight:'400 g',  badge:'POPULAR',  badgeCls:'bg-purple-100 text-purple-700', emoji:'🍞' },
-  { id:4, name:'Amul Butter Salted',        cat:'Dairy & Eggs',  price:55,  original:60,  weight:'100 g',  badge:'',         badgeCls:'',                              emoji:'🧈' },
-  { id:5, name:'Kurkure Masala Munch',      cat:'Snacks',        price:20,  original:0,   weight:'90 g',   badge:'POPULAR',  badgeCls:'bg-orange-100 text-orange-700', emoji:'🍿' },
-  { id:6, name:'Orange Juice Cold Press',   cat:'Beverages',     price:120, original:150, weight:'500 ml', badge:'OFFER',    badgeCls:'bg-red-100 text-red-600',       emoji:'🧃' },
-  { id:7, name:'Farm Fresh Eggs',           cat:'Dairy & Eggs',  price:99,  original:0,   weight:'12 pcs', badge:'FRESH',    badgeCls:'bg-yellow-100 text-yellow-700', emoji:'🥚' },
-  { id:8, name:'Basmati Rice Premium',      cat:'Staples',       price:180, original:220, weight:'1 kg',   badge:'OFFER',    badgeCls:'bg-red-100 text-red-600',       emoji:'🌾' },
-  { id:9, name:'Sunsilk Shampoo',           cat:'Personal Care', price:110, original:0,   weight:'180 ml', badge:'',         badgeCls:'',                              emoji:'🧴' },
-  { id:10, name:'Chicken Breast Boneless', cat:'Meat & Fish',   price:279, original:320, weight:'500 g',  badge:'FRESH',    badgeCls:'bg-yellow-100 text-yellow-700', emoji:'🍗' },
-  { id:11, name:'Croissant Butter Plain',  cat:'Bakery',        price:45,  original:0,   weight:'1 pc',   badge:'',         badgeCls:'',                              emoji:'🥐' },
-  { id:12, name:'Tomatoes Fresh',          cat:'Fruits & Veg',  price:30,  original:0,   weight:'500 g',  badge:'FRESH',    badgeCls:'bg-yellow-100 text-yellow-700', emoji:'🍅' },
+  { id:'p1', name:'Farm Fresh Tomatoes', cat:'Fruits & Vegetables', price:49, orig:65, weight:'500g', emoji:'🍅', badge:'MUST BUY', badgeColor:'#108A43' },
+  { id:'p2', name:'Organic Bananas',      cat:'Fruits & Vegetables', price:39, orig:45, weight:'1 dozen', emoji:'🍌', badge:'10% OFF', badgeColor:'#F7C11E' },
+  { id:'p3', name:'Full Cream Milk',      cat:'Dairy, Bread & Eggs', price:68, orig:72, weight:'1L', emoji:'🥛', badge:'OFFER', badgeColor:'#108A43' },
+  { id:'p4', name:'Whole Wheat Bread',    cat:'Dairy, Bread & Eggs', price:42, orig:50, weight:'400g', emoji:'🍞', badge:'FRESH', badgeColor:'#6B7280' },
+  { id:'p5', name:'Lay\'s Classic Chips', cat:'Munchies & Snacks',   price:30, orig:35, weight:'75g',  emoji:'🍟', badge:'HOT',  badgeColor:'#EA580C' },
+  { id:'p6', name:'Kurkure Masala',       cat:'Munchies & Snacks',   price:20, orig:20, weight:'82g',  emoji:'🌶️', badge:'',    badgeColor:'' },
+  { id:'p7', name:'Coca-Cola',            cat:'Cold Drinks & Juices', price:40, orig:45, weight:'600ml', emoji:'🥤', badge:'COLD', badgeColor:'#2563EB' },
+  { id:'p8', name:'Tropicana Orange',     cat:'Cold Drinks & Juices', price:75, orig:80, weight:'1L',   emoji:'🍊', badge:'',    badgeColor:'' },
+  { id:'p9', name:'Maggi Noodles',        cat:'Instant Foods',        price:14, orig:14, weight:'70g',  emoji:'🍜', badge:'CLASSIC', badgeColor:'#D97706' },
+  { id:'p10',name:'Chicken Breast',       cat:'Meat & Fish',          price:220,orig:260,weight:'500g', emoji:'🍗', badge:'FRESH', badgeColor:'#DC2626' },
+  { id:'p11',name:'Bonn Burger Buns',     cat:'Bakery',               price:45, orig:52, weight:'6 pcs', emoji:'🥐', badge:'NEW',  badgeColor:'#7C3AED' },
+  { id:'p12',name:'Dove Body Wash',       cat:'Personal Care',        price:189,orig:220,weight:'200ml',emoji:'🧴', badge:'20% OFF', badgeColor:'#DB2777' },
 ];
 
-// ─── STATE ────────────────────────────────────────────────────
-let cart = {};          // { productId: quantity }
-let selectedCat = 'All';
-let searchQ = '';
-let activeSlide = 0;
-let isDark = false;
+let state = {
+  cart         : {},       // { productId: qty }
+  selectedCat  : 'All',
+  coupon       : null,
+  discount     : 0,
+  addresses    : [{ id:1, label:'Home', line:'123 Main Street', area:'Bengaluru' }],
+  defaultAddr  : 1,
+  orders       : [],
+  activeOrder  : null,
+  trackingProg : 0.45,
+  trackingTimer: null,
+  selectedUpi  : 'Google Pay',
+  payMethod    : 'UPI',
+  mapZoom      : 1.0,
+  dark         : false,
+  currentScreen: 'home',
+};
 
-// ─── INIT ─────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  renderCategories();
-  renderChips();
-  renderProducts();
-  startBannerAuto();
-  syncBannerDots();
-  document.getElementById('banner-track').addEventListener('scroll', onBannerScroll);
-});
+/* ════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════ */
+function navigate(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + screen);
+  if (!el) return;
+  el.classList.add('active');
+  el.classList.remove('screen-enter');
+  void el.offsetWidth;
+  el.classList.add('screen-enter');
+  state.currentScreen = screen;
+  renderScreen(screen);
+}
 
-// ─── BANNER ───────────────────────────────────────────────────
-function startBannerAuto() {
-  setInterval(() => {
-    activeSlide = (activeSlide + 1) % 3;
-    const track = document.getElementById('banner-track');
-    const card = track.children[activeSlide];
-    track.scrollTo({ left: card.offsetLeft - 16, behavior: 'smooth' });
-    updateDots(activeSlide);
-  }, 4000);
-}
-function onBannerScroll() {
-  const track = document.getElementById('banner-track');
-  const idx = Math.round(track.scrollLeft / 316);
-  if (idx !== activeSlide) { activeSlide = idx; updateDots(idx); }
-}
-function updateDots(active) {
-  for (let i = 0; i < 3; i++) {
-    const d = document.getElementById(`dot-${i}`);
-    if (i === active) { d.style.width = '20px'; d.style.background = '#108A43'; }
-    else { d.style.width = '6px'; d.style.background = '#E4E4E7'; }
+function renderScreen(screen) {
+  switch(screen) {
+    case 'home':      renderHome(); break;
+    case 'categories':renderCategories(); break;
+    case 'search':    renderSearch(); break;
+    case 'cart':      renderCart(); break;
+    case 'orders':    renderOrders(); break;
+    case 'tracking':  renderTracking(); break;
+    case 'payment':   renderPayment(); break;
   }
 }
-function syncBannerDots() { updateDots(0); }
 
-// ─── CATEGORIES ───────────────────────────────────────────────
-function renderCategories() {
-  const grid = document.getElementById('category-grid');
-  grid.innerHTML = CATEGORIES.map(c => `
-    <div class="category-tile flex flex-col items-center gap-1 p-2 rounded-2xl cursor-pointer text-center"
-         style="background:${selectedCat===c.name?'#E6F5EC':c.bg}"
-         onclick="selectCategory('${c.name}')">
-      <span class="text-2xl">${c.emoji}</span>
-      <span class="text-[10px] font-semibold text-[#1F2937] dark:text-white leading-tight">${c.name}</span>
-    </div>
-  `).join('');
+/* ════════════════════════════════════════
+   BOTTOM NAV BUILDER
+════════════════════════════════════════ */
+const NAV_TABS = [
+  { id:'home',       label:'Home',       icon:'home' },
+  { id:'categories', label:'Categories', icon:'grid_view' },
+  { id:'search',     label:'Search',     icon:'search' },
+  { id:'cart',       label:'Cart',       icon:'shopping_cart' },
+];
+
+function buildNav(containerId, activeTab) {
+  const cartCount = Object.values(state.cart).reduce((a,b)=>a+b, 0);
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = `
+    <div class="flex justify-around items-center h-16">
+      ${NAV_TABS.map(t => {
+        const isActive = t.id === activeTab;
+        const color = isActive ? '#108A43' : '#71717A';
+        const weight = isActive ? '900' : '400';
+        const isCart = t.id === 'cart';
+        return `
+          <button onclick="navigate('${t.id}')" class="flex flex-col items-center gap-0.5 px-4 py-2 relative">
+            <div class="relative">
+              <span class="ms" style="font-size:24px;color:${color};font-variation-settings:'FILL' ${isActive?1:0},'wght' 500">${t.icon}</span>
+              ${isCart && cartCount > 0 ? `<div class="cart-badge badge-anim">${cartCount}</div>` : ''}
+            </div>
+            <span class="text-xs font-700" style="color:${color}">${t.label}</span>
+            ${isActive ? `<div style="width:4px;height:4px;border-radius:50%;background:#108A43;position:absolute;bottom:-2px;left:50%;transform:translateX(-50%)"></div>` : ''}
+          </button>`;
+      }).join('')}
+    </div>`;
 }
 
-function renderChips() {
-  const row = document.getElementById('chip-row');
-  const all = ['All', ...CATEGORIES.map(c => c.name)];
-  row.innerHTML = all.map(c => `
-    <button onclick="selectCategory('${c}')"
-      class="flex-shrink-0 text-[12px] font-semibold px-3 py-1.5 rounded-full border transition-all
-             ${selectedCat===c
-               ? 'bg-[#108A43] text-white border-[#108A43]'
-               : 'bg-white dark:bg-zinc-700 text-[#1F2937] dark:text-white border-[#E4E4E7] dark:border-zinc-600'}">
-      ${c==='All'?'🛒 ':''} ${c}
-    </button>
-  `).join('');
+/* ════════════════════════════════════════
+   HOME SCREEN
+════════════════════════════════════════ */
+let bannerIdx = 0;
+let bannerTimer;
+
+function renderHome() {
+  buildNav('homeNav', 'home');
+  renderHomeCatGrid();
+  renderHomeFilterChips();
+  renderHomeProducts();
+  updateHomeAddr();
+  updateActiveOrderBanner();
+  startBannerAuto();
 }
 
-function selectCategory(cat) {
-  selectedCat = cat;
-  renderCategories();
-  renderChips();
-  renderProducts();
-  document.getElementById('products-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+function updateHomeAddr() {
+  const addr = state.addresses.find(a => a.id === state.defaultAddr);
+  const el = document.getElementById('homeAddr');
+  if (el) el.textContent = addr ? `${addr.line}, ${addr.area}` : 'Add a delivery address';
 }
 
-// ─── PRODUCTS ─────────────────────────────────────────────────
-function filteredProducts() {
-  return PRODUCTS.filter(p => {
-    const matchCat = selectedCat === 'All' || p.cat === selectedCat;
-    const matchQ = !searchQ || p.name.toLowerCase().includes(searchQ.toLowerCase());
-    return matchCat && matchQ;
+function updateActiveOrderBanner() {
+  const banner = document.getElementById('activeOrderBanner');
+  if (banner) banner.classList.toggle('hidden', !state.activeOrder);
+}
+
+function renderHomeCatGrid() {
+  const g = document.getElementById('homeCatGrid');
+  if (!g) return;
+  g.innerHTML = CATS.slice(0,8).map(c => `
+    <div class="cat-tile flex flex-col items-center gap-1.5" onclick="navigate('categories');setCatFilter('${c.name}')">
+      <div class="w-full aspect-square rounded-2xl flex items-center justify-center text-2xl" style="background:${c.bg}">${c.emoji}</div>
+      <div class="text-xs font-700 text-center text-main leading-tight">${c.name.split(' ')[0]}</div>
+    </div>`).join('');
+}
+
+function renderHomeFilterChips() {
+  const c = document.getElementById('homeFilterChips');
+  if (!c) return;
+  const cats = ['All', ...new Set(PRODUCTS.map(p=>p.cat))];
+  c.innerHTML = cats.map(cat => `
+    <button class="chip ${state.selectedCat === cat ? 'active':''} flex-shrink-0" onclick="setHomeCat('${cat}')">${cat === 'All' ? '🛒 All' : cat.split(' ')[0]}</button>`).join('');
+}
+
+function setHomeCat(cat) {
+  state.selectedCat = cat;
+  renderHomeFilterChips();
+  renderHomeProducts();
+}
+
+function renderHomeProducts() {
+  const g = document.getElementById('homeProductGrid');
+  if (!g) return;
+  const list = state.selectedCat === 'All' ? PRODUCTS : PRODUCTS.filter(p=>p.cat===state.selectedCat);
+  g.innerHTML = list.map(p => productCardHTML(p)).join('');
+}
+
+function startBannerAuto() {
+  clearInterval(bannerTimer);
+  bannerTimer = setInterval(() => {
+    bannerIdx = (bannerIdx + 1) % 3;
+    moveBanner(bannerIdx);
+  }, 4000);
+}
+
+function moveBanner(idx) {
+  const track = document.getElementById('bannerTrack');
+  if (track) track.style.transform = `translateX(-${idx*100}%)`;
+  [0,1,2].forEach(i => {
+    const d = document.getElementById('dot'+i);
+    if (!d) return;
+    d.style.width = i===idx ? '20px' : '6px';
+    d.className = `banner-dot h-1.5 rounded-full transition-all duration-300 ${i===idx?'bg-brand':'bg-gray-300'}`;
   });
 }
 
-function renderProducts() {
-  const grid = document.getElementById('products-grid');
-  const empty = document.getElementById('empty-state');
-  const ps = filteredProducts();
-  if (ps.length === 0) {
-    grid.innerHTML = '';
-    empty.classList.remove('hidden');
-    return;
-  }
-  empty.classList.add('hidden');
-  grid.innerHTML = ps.map(p => productCardHTML(p)).join('');
+/* ════════════════════════════════════════
+   CATEGORIES SCREEN
+════════════════════════════════════════ */
+function renderCategories() {
+  buildNav('catNav', 'categories');
+  renderCatList();
+  renderCatProducts();
+  updateCatCartBadge();
 }
 
-function productCardHTML(p) {
-  const inCart = cart[p.id] || 0;
-  const discount = p.original > p.price ? Math.round((p.original - p.price) / p.original * 100) : 0;
-  return `
-    <div class="product-card bg-white dark:bg-[#27272A] rounded-2xl border border-[#E4E4E7] dark:border-zinc-700 p-2.5 flex flex-col gap-1.5 shadow-sm" data-id="${p.id}">
-      <!-- Image area -->
-      <div class="w-full aspect-square rounded-xl bg-[#F6F7F9] dark:bg-zinc-800 relative flex items-center justify-center overflow-hidden">
-        <span class="text-5xl">${p.emoji}</span>
-        ${discount > 0 ? `<span class="absolute top-0 left-0 bg-[#108A43] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-tl-xl rounded-br-lg">${discount}% OFF</span>` : ''}
-        ${p.badge ? `<span class="absolute top-1 right-1 ${p.badgeCls} text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">${p.badge}</span>` : ''}
-      </div>
-      <!-- Info -->
-      <p class="text-[10px] font-semibold text-[#71717A]">${p.weight}</p>
-      <p class="text-[12px] font-bold text-[#1F2937] dark:text-white leading-tight line-clamp-2">${p.name}</p>
-      <!-- Price + CTA -->
-      <div class="flex items-end justify-between mt-auto">
-        <div>
-          <p class="text-[14px] font-extrabold text-[#1F2937] dark:text-white">₹${p.price}</p>
-          ${p.original > p.price ? `<p class="text-[10px] text-[#71717A] line-through">₹${p.original}</p>` : ''}
-        </div>
-        ${inCart === 0
-          ? `<button class="btn-add border border-[#108A43] text-[#108A43] font-extrabold text-[11px] px-3 py-1.5 rounded-lg" onclick="addToCart(${p.id})">ADD</button>`
-          : `<div class="qty-row flex items-center bg-[#108A43] rounded-lg overflow-hidden h-8">
-               <button class="w-8 h-full text-white font-black text-[17px] flex items-center justify-center hover:bg-[#076430]" onclick="removeFromCart(${p.id})">−</button>
-               <span class="text-white font-extrabold text-[13px] px-1">${inCart}</span>
-               <button class="w-8 h-full text-white font-black text-[17px] flex items-center justify-center hover:bg-[#076430]" onclick="addToCart(${p.id})">+</button>
-             </div>`
-        }
-      </div>
-    </div>
-  `;
+function updateCatCartBadge() {
+  const cnt = Object.values(state.cart).reduce((a,b)=>a+b,0);
+  const b = document.getElementById('catCartBadge');
+  if (!b) return;
+  b.textContent = cnt;
+  b.style.display = cnt > 0 ? 'flex' : 'none';
 }
 
-function addToCart(id) {
-  cart[id] = (cart[id] || 0) + 1;
-  updateCart();
-  renderProducts();
-}
-function removeFromCart(id) {
-  if (!cart[id]) return;
-  cart[id]--;
-  if (cart[id] === 0) delete cart[id];
-  updateCart();
-  renderProducts();
-}
-
-function updateCart() {
-  const totalQty  = Object.values(cart).reduce((a,b) => a+b, 0);
-  const totalPrice = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const p = PRODUCTS.find(p => p.id === parseInt(id));
-    return sum + (p ? p.price * qty : 0);
-  }, 0);
-
-  // Cart bar
-  const bar = document.getElementById('cart-bar');
-  if (totalQty > 0) {
-    bar.classList.remove('hidden');
-    document.getElementById('cart-badge').textContent = totalQty;
-    document.getElementById('cart-summary').textContent = `${totalQty} ${totalQty===1?'item':'items'} · ₹${totalPrice.toFixed(2)}`;
-  } else {
-    bar.classList.add('hidden');
-  }
-
-  // Nav badge
-  const navBadge = document.getElementById('nav-cart-badge');
-  if (totalQty > 0) {
-    navBadge.classList.remove('hidden');
-    navBadge.classList.add('flex');
-    document.getElementById('nav-cart-count').textContent = totalQty;
-  } else {
-    navBadge.classList.add('hidden');
-  }
-
-  // Cart modal list
-  renderCartModal(totalPrice);
-}
-
-function renderCartModal(totalPrice) {
-  const list = document.getElementById('cart-items-list');
-  const footer = document.getElementById('cart-footer');
-  const entries = Object.entries(cart);
-  if (entries.length === 0) {
-    list.innerHTML = '<p class="text-center text-[#71717A] py-8">Your cart is empty</p>';
-    footer.classList.add('hidden');
-    return;
-  }
-  footer.classList.remove('hidden');
-  document.getElementById('cart-subtotal').textContent = `₹${totalPrice.toFixed(2)}`;
-  list.innerHTML = entries.map(([id, qty]) => {
-    const p = PRODUCTS.find(p => p.id === parseInt(id));
-    if (!p) return '';
+function renderCatList() {
+  const c = document.getElementById('catList');
+  if (!c) return;
+  c.innerHTML = CATS.map(cat => {
+    const sel = state.selectedCat === cat.name;
     return `
-      <div class="flex items-center gap-3 py-2">
-        <div class="w-12 h-12 rounded-xl bg-[#F6F7F9] flex items-center justify-center text-2xl">${p.emoji}</div>
+      <div class="cat-tile flex items-center gap-3 p-4 card cursor-pointer ${sel?'selected':''}" onclick="setCatFilter('${cat.name}')">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0" style="background:${cat.bg}">${cat.emoji}</div>
         <div class="flex-1">
-          <p class="text-[13px] font-bold text-[#1F2937] dark:text-white">${p.name}</p>
-          <p class="text-[11px] text-[#71717A]">${p.weight} · ₹${p.price} each</p>
+          <div class="font-800 text-sm ${sel?'text-brand':'text-main'}">${cat.name}</div>
+          <div class="text-xs text-sub">${PRODUCTS.filter(p=>p.cat===cat.name).length} items</div>
         </div>
-        <div class="flex items-center bg-[#108A43] rounded-lg overflow-hidden h-8">
-          <button class="w-8 h-full text-white font-black text-[16px] flex items-center justify-center" onclick="removeFromCart(${p.id})">−</button>
-          <span class="text-white font-extrabold text-[12px] px-1">${qty}</span>
-          <button class="w-8 h-full text-white font-black text-[16px] flex items-center justify-center" onclick="addToCart(${p.id})">+</button>
-        </div>
-      </div>
-    `;
+        <span class="ms" style="font-size:18px;color:${sel?'#108A43':'#A1A1AA'}">${sel?'check_circle':'chevron_right'}</span>
+      </div>`;
   }).join('');
 }
 
-// ─── SEARCH ───────────────────────────────────────────────────
-function filterProducts(q) {
-  searchQ = q;
-  document.getElementById('clear-btn').classList.toggle('hidden', q.length === 0);
-  renderProducts();
+function setCatFilter(cat) {
+  state.selectedCat = cat;
+  renderCatList();
+  renderCatProducts();
 }
+
+function renderCatProducts() {
+  const q = (document.getElementById('catSearchInput') || {value:''}).value.toLowerCase();
+  let list = state.selectedCat === 'All' ? PRODUCTS : PRODUCTS.filter(p=>p.cat===state.selectedCat);
+  if (q) list = list.filter(p => p.name.toLowerCase().includes(q));
+  const title = document.getElementById('catProductsTitle');
+  const count = document.getElementById('catProductsCount');
+  const grid  = document.getElementById('catProductGrid');
+  if (title) title.textContent = state.selectedCat === 'All' ? 'All Products' : state.selectedCat;
+  if (count) count.textContent = `${list.length} items`;
+  if (grid)  grid.innerHTML = list.map(p => productCardHTML(p)).join('');
+}
+
+/* ════════════════════════════════════════
+   SEARCH SCREEN
+════════════════════════════════════════ */
+function renderSearch() {
+  buildNav('searchNav', 'search');
+  renderRecentChips();
+  renderPopular();
+  setTimeout(() => { const inp = document.getElementById('searchInput'); if(inp) inp.focus(); }, 200);
+}
+
+function renderRecentChips() {
+  const c = document.getElementById('recentChips');
+  if (!c) return;
+  c.innerHTML = RECENT.map(t => `
+    <button class="chip flex items-center gap-1.5" onclick="setSearchQuery('${t}')">
+      <span class="ms text-sub" style="font-size:14px">history</span>${t}
+    </button>`).join('');
+}
+
+function renderPopular() {
+  const g = document.getElementById('popularGrid');
+  if (!g) return;
+  g.innerHTML = PRODUCTS.slice(0,6).map(p => productCardHTML(p)).join('');
+}
+
+function renderSearchResults() {
+  const q = (document.getElementById('searchInput') || {value:''}).value.trim().toLowerCase();
+  const clearBtn = document.getElementById('searchClearBtn');
+  if (clearBtn) clearBtn.classList.toggle('hidden', !q);
+
+  const idle    = document.getElementById('searchIdle');
+  const results = document.getElementById('searchResults');
+  const empty   = document.getElementById('searchResultsEmpty');
+  const grid    = document.getElementById('searchResultsGrid');
+  const title   = document.getElementById('searchResultsTitle');
+  const count   = document.getElementById('searchResultsCount');
+  const emTitle = document.getElementById('searchEmptyTitle');
+
+  if (!q) {
+    if (idle)    idle.classList.remove('hidden');
+    if (results) results.classList.add('hidden');
+    return;
+  }
+  if (idle)    idle.classList.add('hidden');
+  if (results) results.classList.remove('hidden');
+
+  const found = PRODUCTS.filter(p => p.name.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q));
+  if (title) title.textContent = `Results for "${q}"`;
+  if (count) count.textContent = `${found.length} found`;
+
+  if (found.length === 0) {
+    if (empty) empty.classList.remove('hidden');
+    if (grid)  grid.innerHTML = '';
+    if (emTitle) emTitle.textContent = `No results for "${q}"`;
+  } else {
+    if (empty) empty.classList.add('hidden');
+    if (grid)  grid.innerHTML = found.map(p => productCardHTML(p)).join('');
+  }
+}
+
 function clearSearch() {
-  searchQ = '';
-  document.getElementById('search-input').value = '';
-  document.getElementById('clear-btn').classList.add('hidden');
-  renderProducts();
+  const inp = document.getElementById('searchInput');
+  if (inp) { inp.value = ''; inp.focus(); }
+  renderSearchResults();
 }
 
-// ─── TAB NAV ─────────────────────────────────────────────────
-function selectTab(tab) {
-  if (tab === 'search') {
-    document.getElementById('search-input').focus();
-    document.getElementById('search-input').scrollIntoView({ behavior:'smooth', block:'center' });
+function setSearchQuery(q) {
+  navigate('search');
+  setTimeout(() => {
+    const inp = document.getElementById('searchInput');
+    if (inp) { inp.value = q; renderSearchResults(); }
+  }, 100);
+}
+
+/* ════════════════════════════════════════
+   PRODUCT CARD HTML
+════════════════════════════════════════ */
+function productCardHTML(p) {
+  const qty = state.cart[p.id] || 0;
+  const pct = p.orig > p.price ? Math.round((1-p.price/p.orig)*100) : 0;
+  return `
+    <div class="card p-3 product-card flex flex-col">
+      <div class="relative mb-2">
+        ${p.badge ? `<div class="absolute top-1 left-1 text-white text-xs font-800 px-2 py-0.5 rounded-full z-10" style="background:${p.badgeColor}">${p.badge}</div>` : ''}
+        ${pct>0 ? `<div class="absolute top-1 right-1 bg-red-500 text-white text-xs font-800 px-1.5 py-0.5 rounded-full">${pct}%</div>` : ''}
+        <div class="w-full rounded-xl flex items-center justify-center text-4xl" style="height:90px;background:#F4F4F5">${p.emoji}</div>
+      </div>
+      <div class="font-800 text-sm text-main leading-tight mb-0.5 line-clamp-2">${p.name}</div>
+      <div class="text-xs text-sub mb-2">${p.weight}</div>
+      <div class="mt-auto flex items-center justify-between">
+        <div>
+          <span class="font-900 text-sm text-main">₹${p.price}</span>
+          ${p.orig>p.price ? `<span class="text-xs text-sub line-through ml-1">₹${p.orig}</span>` : ''}
+        </div>
+        ${qty === 0
+          ? `<button class="btn-add" onclick="addToCart('${p.id}')">+ ADD</button>`
+          : `<div class="qty-row">
+               <div class="qty-btn" onclick="decreaseCart('${p.id}')">−</div>
+               <div class="qty-num" id="qty-${p.id}">${qty}</div>
+               <div class="qty-btn" onclick="addToCart('${p.id}')">+</div>
+             </div>`}
+      </div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════
+   CART LOGIC
+════════════════════════════════════════ */
+function addToCart(id) {
+  state.cart[id] = (state.cart[id] || 0) + 1;
+  refreshAllProductCards();
+  refreshFloatingCartBar();
+  if (state.currentScreen === 'cart') renderCart();
+  if (state.currentScreen === 'categories') updateCatCartBadge();
+  buildNav(state.currentScreen + 'Nav', state.currentScreen);
+  showToast('Added to cart 🛒');
+}
+
+function decreaseCart(id) {
+  if (!state.cart[id]) return;
+  state.cart[id]--;
+  if (state.cart[id] <= 0) delete state.cart[id];
+  refreshAllProductCards();
+  refreshFloatingCartBar();
+  if (state.currentScreen === 'cart') renderCart();
+  if (state.currentScreen === 'categories') updateCatCartBadge();
+  buildNav(state.currentScreen + 'Nav', state.currentScreen);
+}
+
+function refreshAllProductCards() {
+  PRODUCTS.forEach(p => {
+    const el = document.getElementById('qty-'+p.id);
+    if (el) el.textContent = state.cart[p.id] || 0;
+  });
+}
+
+let floatingBar;
+function refreshFloatingCartBar() {
+  const count = Object.values(state.cart).reduce((a,b)=>a+b,0);
+  if (!floatingBar) {
+    floatingBar = document.createElement('div');
+    floatingBar.id = 'floatingCartBar';
+    floatingBar.className = 'fixed z-40 left-1/2 cart-bar-enter';
+    floatingBar.style.cssText = 'bottom:72px;transform:translateX(-50%);width:calc(min(430px,100vw) - 32px)';
+    document.getElementById('app').appendChild(floatingBar);
   }
-  if (tab === 'categories') {
-    document.getElementById('category-grid').scrollIntoView({ behavior:'smooth', block:'start' });
+  if (count === 0) { floatingBar.style.display = 'none'; return; }
+  const total = cartTotal();
+  floatingBar.style.display = 'block';
+  floatingBar.innerHTML = `
+    <button class="btn-primary w-full h-14 flex items-center justify-between px-5 shadow-xl" onclick="navigate('cart')" style="border-radius:16px">
+      <div class="flex items-center gap-2">
+        <div class="bg-white/20 text-white text-xs font-900 w-6 h-6 rounded-full flex items-center justify-center">${count}</div>
+        <span class="font-700 text-sm">item${count>1?'s':''} in basket</span>
+      </div>
+      <div class="flex items-center gap-1.5 font-800">₹${total} <span class="ms" style="font-size:18px">shopping_cart</span></div>
+    </button>`;
+}
+
+function cartTotal() {
+  let sub = 0;
+  Object.entries(state.cart).forEach(([id,qty]) => {
+    const p = PRODUCTS.find(p=>p.id===id);
+    if (p) sub += p.price * qty;
+  });
+  const del = sub >= 99 ? 0 : 25;
+  const hand = 5;
+  return Math.round(sub + del + hand - state.discount);
+}
+
+function cartSubtotal() {
+  return Object.entries(state.cart).reduce((sum,[id,qty]) => {
+    const p = PRODUCTS.find(p=>p.id===id);
+    return sum + (p ? p.price*qty : 0);
+  }, 0);
+}
+
+/* ════════════════════════════════════════
+   CART SCREEN
+════════════════════════════════════════ */
+function renderCart() {
+  const items = Object.keys(state.cart);
+  const empty = document.getElementById('cartEmpty');
+  const content = document.getElementById('cartContent');
+  const checkoutBar = document.getElementById('cartCheckoutBar');
+  const badge = document.getElementById('cartItemCountBadge');
+
+  const totalQty = Object.values(state.cart).reduce((a,b)=>a+b,0);
+  if (badge) badge.textContent = `${totalQty} item${totalQty!==1?'s':''}`;
+
+  if (items.length === 0) {
+    if (empty)   empty.classList.remove('hidden');
+    if (content) content.classList.add('hidden');
+    if (checkoutBar) checkoutBar.classList.add('hidden');
+    return;
+  }
+
+  if (empty)       empty.classList.add('hidden');
+  if (content)     content.classList.remove('hidden');
+  if (checkoutBar) checkoutBar.classList.remove('hidden');
+
+  const sub  = cartSubtotal();
+  const del  = sub >= 99 ? 0 : 25;
+  const hand = 5;
+  const total = sub + del + hand - state.discount;
+
+  // Free delivery banner
+  const fdb = document.getElementById('freeDeliveryBanner');
+  if (fdb) {
+    if (sub >= 99) {
+      fdb.innerHTML = `<div class="flex items-center gap-2"><span class="ms text-brand" style="font-size:18px">celebration</span><span class="font-800 text-sm text-brand">You unlocked FREE Delivery! 🚚💨</span></div>`;
+      fdb.style.background = '#E6F5EC';
+    } else {
+      const rem = 99 - sub;
+      const pct = Math.min((sub/99)*100, 100);
+      fdb.innerHTML = `
+        <div class="font-800 text-sm text-main mb-2">Add ₹${Math.ceil(rem)} more for FREE Delivery</div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>`;
+      fdb.style.background = '#F0FDF4';
+    }
+  }
+
+  // Cart items
+  const list = document.getElementById('cartItemsList');
+  if (list) {
+    list.innerHTML = Object.entries(state.cart).map(([id,qty]) => {
+      const p = PRODUCTS.find(p=>p.id===id);
+      if (!p) return '';
+      return `
+        <div class="card p-3 flex items-center gap-3">
+          <div class="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0" style="background:#F4F4F5">${p.emoji}</div>
+          <div class="flex-1 min-w-0">
+            <div class="font-800 text-sm text-main leading-tight truncate">${p.name}</div>
+            <div class="text-xs text-sub mb-1">${p.weight}</div>
+            <div class="font-900 text-sm" style="color:#108A43">₹${p.price} <span class="text-sub font-400 line-through text-xs">₹${p.orig}</span></div>
+          </div>
+          <div class="qty-row flex-shrink-0">
+            <div class="qty-btn" onclick="decreaseCart('${id}')">−</div>
+            <div class="qty-num">${qty}</div>
+            <div class="qty-btn" onclick="addToCart('${id}')">+</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // Recommendations
+  const recoList = document.getElementById('recoList');
+  if (recoList) {
+    const cartIds = new Set(Object.keys(state.cart));
+    const recos = PRODUCTS.filter(p => !cartIds.has(p.id)).slice(0,4);
+    recoList.innerHTML = recos.map(p => `
+      <div class="card p-3 flex-shrink-0" style="width:130px">
+        <div class="w-full h-16 rounded-xl flex items-center justify-center text-3xl mb-2" style="background:#F4F4F5">${p.emoji}</div>
+        <div class="font-800 text-xs text-main truncate mb-0.5">${p.name}</div>
+        <div class="text-xs text-sub mb-2">${p.weight}</div>
+        <div class="flex items-center justify-between">
+          <span class="font-800 text-xs text-main">₹${p.price}</span>
+          <button class="btn-add" style="height:24px;font-size:10px;padding:0 7px" onclick="addToCart('${p.id}')">+ ADD</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // Bill details
+  const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setEl('billSubtotal', `₹${sub.toFixed(2)}`);
+  setEl('billDelivery', del === 0 ? '🎉 FREE' : `₹${del.toFixed(2)}`);
+  setEl('billHandling', `₹${hand.toFixed(2)}`);
+  setEl('billTotal',    `₹${total.toFixed(2)}`);
+  setEl('checkoutTotal',`₹${total.toFixed(2)}`);
+
+  const dRow = document.getElementById('discountRow');
+  const dEl  = document.getElementById('billDiscount');
+  if (state.coupon && state.discount > 0) {
+    if (dRow) dRow.classList.remove('hidden');
+    if (dEl)  dEl.textContent = `-₹${state.discount}`;
+  } else {
+    if (dRow) dRow.classList.add('hidden');
+  }
+
+  const del2 = document.getElementById('billDelivery');
+  if (del2) del2.style.color = del === 0 ? '#108A43' : '';
+
+  // Address
+  const addr = state.addresses.find(a => a.id === state.defaultAddr);
+  setEl('cartAddrLabel', addr ? `Delivering to ${addr.label}` : 'Add Address');
+  setEl('cartAddrLine',  addr ? `${addr.line}, ${addr.area}` : 'Setup your delivery location');
+}
+
+/* ════════════════════════════════════════
+   COUPON
+════════════════════════════════════════ */
+function applyCoupon() {
+  const code = (document.getElementById('couponField') || {value:''}).value.trim().toUpperCase();
+  const errEl = document.getElementById('couponError');
+  if (code === 'AI3DPROMO' || code === 'SAVE10') {
+    state.coupon = code;
+    state.discount = 30;
+    const appDiv = document.getElementById('couponApplied');
+    const inpDiv = document.getElementById('couponInput');
+    const txt    = document.getElementById('couponAppliedText');
+    if (appDiv) appDiv.classList.remove('hidden');
+    if (inpDiv) inpDiv.classList.add('hidden');
+    if (txt)    txt.innerHTML = `<span class="ms" style="font-size:15px">confirmation_number</span>Code '${code}' Applied! (-₹${state.discount})`;
+    if (errEl)  errEl.classList.add('hidden');
+    renderCart();
+    showToast('Coupon applied! 🎉');
+  } else {
+    if (errEl) errEl.classList.remove('hidden');
   }
 }
 
-// ─── CART MODAL ──────────────────────────────────────────────
-function openCart()  { document.getElementById('cart-modal').classList.remove('hidden'); }
-function closeCart() { document.getElementById('cart-modal').classList.add('hidden'); }
-document.getElementById('cart-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeCart(); });
-
-// ─── ADDRESS ─────────────────────────────────────────────────
-function showAddressSheet()  { document.getElementById('address-modal').classList.remove('hidden'); }
-function closeAddressSheet() { document.getElementById('address-modal').classList.add('hidden'); }
-document.getElementById('address-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeAddressSheet(); });
-function selectAddress(label, line) {
-  document.getElementById('address-subtitle').textContent = `${label} – ${line}`;
-  closeAddressSheet();
+function removeCoupon() {
+  state.coupon   = null;
+  state.discount = 0;
+  const appDiv = document.getElementById('couponApplied');
+  const inpDiv = document.getElementById('couponInput');
+  const errEl  = document.getElementById('couponError');
+  if (appDiv) appDiv.classList.add('hidden');
+  if (inpDiv) inpDiv.classList.remove('hidden');
+  if (errEl)  errEl.classList.add('hidden');
+  const f = document.getElementById('couponField');
+  if (f) f.value = '';
+  renderCart();
 }
 
-// ─── THEME ────────────────────────────────────────────────────
-function toggleTheme() {
-  isDark = !isDark;
-  document.documentElement.classList.toggle('dark', isDark);
-  document.getElementById('theme-icon').textContent = isDark ? 'light_mode' : 'dark_mode';
+/* ════════════════════════════════════════
+   ORDERS SCREEN
+════════════════════════════════════════ */
+function renderOrders() {
+  const empty = document.getElementById('ordersEmpty');
+  const list  = document.getElementById('ordersList');
+  const badge = document.getElementById('orderCountBadge');
+  if (badge) badge.textContent = `${state.orders.length} orders`;
+
+  if (state.orders.length === 0) {
+    if (empty) empty.classList.remove('hidden');
+    if (list)  list.innerHTML = '';
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+  if (list) {
+    list.innerHTML = state.orders.map(order => {
+      const isDelivered = order.status === 'Delivered';
+      const date = new Date(order.date).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      return `
+        <div class="card p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style="background:${isDelivered?'#E6F5EC':'#FFF3E0'}">
+                <span class="ms" style="font-size:18px;color:${isDelivered?'#108A43':'#D97706'}">${isDelivered?'check_circle':'two_wheeler'}</span>
+              </div>
+              <div>
+                <div class="font-800 text-sm text-main">Order #${order.id.toString().slice(-8).toUpperCase()}</div>
+                <div class="text-xs text-sub">${date}</div>
+              </div>
+            </div>
+            <div class="text-xs font-800 px-3 py-1 rounded-full" style="background:${isDelivered?'#E6F5EC':'#FFF3E0'};color:${isDelivered?'#108A43':'#D97706'}">${order.status.toUpperCase()}</div>
+          </div>
+          <div class="text-xs text-sub rounded-xl px-3 py-2 mb-3" style="background:#F4F4F5">${order.summary}</div>
+          <div class="flex items-center justify-between pt-3 border-t border-c">
+            <div>
+              <div class="text-xs text-sub">Total Paid</div>
+              <div class="font-900 text-lg" style="color:#108A43">₹${order.total}</div>
+            </div>
+            ${!isDelivered ? `<button class="h-10 px-4 font-800 text-sm rounded-xl flex items-center gap-1.5" style="background:#F7C11E;color:#18181B" onclick="navigate('tracking')"><span class="ms" style="font-size:16px">two_wheeler</span>Track Live</button>` : `<div class="flex items-center gap-1.5 text-xs font-700 px-3 py-2 rounded-xl" style="background:#E6F5EC;color:#108A43"><span class="ms" style="font-size:14px">check_circle</span>Delivered</div>`}
+          </div>
+        </div>`;
+    }).join('');
+  }
 }
+
+/* ════════════════════════════════════════
+   TRACKING SCREEN
+════════════════════════════════════════ */
+let trackingInterval;
+let mapAnimFrame;
+
+function renderTracking() {
+  const order = state.activeOrder;
+  const steps = ['Placed','Confirmed','Packing','Out for Delivery','Delivered'];
+  const curStep = order ? steps.indexOf(order.status) : 0;
+
+  // ETA
+  const etaEl = document.getElementById('etaText');
+  if (etaEl) {
+    if (order) {
+      const mins = order.status === 'Delivered' ? 0 : Math.max(2, Math.round((1 - state.trackingProg) * 10));
+      etaEl.textContent = order.status === 'Delivered' ? 'Delivered! 🎉' : `Arriving in ${mins} Mins`;
+    }
+  }
+
+  // Rider
+  const riderEl = document.getElementById('riderName');
+  const riderSt = document.getElementById('riderStatus');
+  if (riderEl) riderEl.textContent = order?.rider || 'Rahul Kumar';
+  if (riderSt) {
+    const dist = ((1 - state.trackingProg) * 2.4).toFixed(1);
+    riderSt.textContent = order?.status === 'Delivered' ? 'Delivered your basket!' : `Rider is ${dist} km away`;
+  }
+
+  // Tracking address
+  const addrEl = document.getElementById('trackingAddr');
+  const addr = state.addresses.find(a => a.id === state.defaultAddr);
+  if (addrEl && addr) addrEl.textContent = `${addr.line}, ${addr.area}`;
+
+  // Timeline
+  const tl = document.getElementById('deliveryTimeline');
+  if (tl) {
+    tl.innerHTML = steps.map((step, i) => {
+      const done    = i <= curStep;
+      const current = i === curStep;
+      const labels  = ['Order Placed','Order Confirmed','Items Packing','Out for Delivery','Delivered'];
+      const descs   = [
+        'We have received your cart list.',
+        'Store is processing and preparing invoices.',
+        'Fresh items are selected and sealed.',
+        'Rider picked up package and is heading your way.',
+        'Arrived safely! Enjoy fresh products.',
+      ];
+      return `
+        <div class="flex gap-3 ${i < steps.length-1 ? 'mb-0':''}">
+          <div class="flex flex-col items-center">
+            <div class="timeline-dot ${done?'done':'pending'} flex items-center justify-center" style="margin-top:2px">
+              ${done ? `<span class="ms text-white" style="font-size:9px;font-variation-settings:'FILL' 1">check</span>` : ''}
+            </div>
+            ${i < steps.length-1 ? `<div class="timeline-line ${done?'done':''}" style="height:40px;margin:2px 0"></div>` : ''}
+          </div>
+          <div class="pb-${i<steps.length-1?'4':'0'}">
+            <div class="font-${current?'800':'700'} text-sm" style="color:${current?'#108A43':done?'#1F2937':'#A1A1AA'}">${labels[i]}</div>
+            <div class="text-xs" style="color:${current?'#108A43':'#A1A1AA'}">${descs[i]}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // Draw map
+  drawMap();
+  clearInterval(trackingInterval);
+  if (order && order.status !== 'Delivered') {
+    trackingInterval = setInterval(() => {
+      state.trackingProg = Math.min(1, state.trackingProg + 0.002);
+      drawMap();
+    }, 100);
+  }
+}
+
+function drawMap() {
+  const canvas = document.getElementById('mapCanvas');
+  if (!canvas) return;
+  const container = canvas.parentElement;
+  canvas.width  = container.offsetWidth;
+  canvas.height = container.offsetHeight || 200;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // Background
+  const isDark = document.documentElement.classList.contains('dark');
+  ctx.fillStyle = isDark ? '#1E293B' : '#E2E8F0';
+  ctx.fillRect(0, 0, W, H);
+
+  // Streets
+  ctx.strokeStyle = isDark ? '#334155' : '#FFFFFF';
+  ctx.lineWidth = 20;
+  [0.2, 0.5, 0.8].forEach(y => { ctx.beginPath(); ctx.moveTo(0, H*y); ctx.lineTo(W, H*y); ctx.stroke(); });
+  [0.3, 0.7].forEach(x => { ctx.beginPath(); ctx.moveTo(W*x, 0); ctx.lineTo(W*x, H); ctx.stroke(); });
+
+  // River
+  ctx.strokeStyle = isDark ? '#1E3A5F' : '#BAE6FD';
+  ctx.lineWidth = 30;
+  ctx.beginPath(); ctx.moveTo(0, H*0.15);
+  ctx.bezierCurveTo(W*0.3, H*0.1, W*0.6, H*0.3, W, H*0.2);
+  ctx.stroke();
+
+  const stX = W*0.18, stY = H*0.38;
+  const usX = W*0.82, usY = H*0.65;
+  const cp1x = W*0.42, cp1y = H*0.22;
+  const cp2x = W*0.56, cp2y = H*0.78;
+
+  // Dotted route
+  ctx.setLineDash([12, 12]);
+  ctx.strokeStyle = isDark ? '#475569' : '#CBD5E1';
+  ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(stX, stY);
+  ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, usX, usY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Progress route (green)
+  if (state.trackingProg > 0) {
+    const steps = 200;
+    const n = Math.floor(state.trackingProg * steps);
+    ctx.strokeStyle = '#108A43';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const t = i / steps;
+      const x = bezier(stX, cp1x, cp2x, usX, t);
+      const y = bezier(stY, cp1y, cp2y, usY, t);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // Store marker
+  ctx.fillStyle = '#108A43';
+  ctx.beginPath(); ctx.arc(stX, stY, 12, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(stX, stY, 4, 0, Math.PI*2); ctx.fill();
+
+  // Home marker
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath(); ctx.arc(usX, usY, 12, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(usX, usY, 4, 0, Math.PI*2); ctx.fill();
+
+  // Rider dot
+  if (state.trackingProg < 1) {
+    const t = state.trackingProg;
+    const rx = bezier(stX, cp1x, cp2x, usX, t);
+    const ry = bezier(stY, cp1y, cp2y, usY, t);
+    ctx.fillStyle = 'rgba(247,193,30,0.35)';
+    ctx.beginPath(); ctx.arc(rx, ry, 20, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#F7C11E';
+    ctx.beginPath(); ctx.arc(rx, ry, 12, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#18181B';
+    ctx.beginPath(); ctx.arc(rx, ry, 5, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+function bezier(p0, p1, p2, p3, t) {
+  return (1-t)**3*p0 + 3*(1-t)**2*t*p1 + 3*(1-t)*t**2*p2 + t**3*p3;
+}
+
+function adjustZoom(dir) { state.mapZoom = Math.min(1.8, Math.max(0.6, state.mapZoom + dir*0.15)); drawMap(); }
+function toggleTerminal() {
+  const logs = document.getElementById('terminalLogs');
+  if (logs) logs.classList.toggle('hidden');
+}
+
+/* ════════════════════════════════════════
+   PAYMENT SCREEN
+════════════════════════════════════════ */
+function renderPayment() {
+  const total = cartTotal();
+  const el = document.getElementById('payAmount');
+  if (el) el.textContent = `₹${total}`;
+  const btn = document.getElementById('payProceedBtn');
+  if (btn) btn.textContent = state.payMethod === 'COD' ? 'Place Order with COD' : `Pay ₹${total} Securely`;
+  document.getElementById('paymentSelection').classList.remove('hidden');
+  document.getElementById('paymentProcessing').classList.add('hidden');
+  document.getElementById('paymentSuccess').classList.add('hidden');
+  document.getElementById('payBackBtn').classList.remove('hidden');
+}
+
+function selectMethod(method) {
+  state.payMethod = method;
+  const cards = { UPI:'upiMethodCard', CARD:'cardMethodCard', COD:'codMethodCard' };
+  const radios = { CARD:'cardRadio', COD:'codRadio' };
+  const apps   = document.getElementById('upiApps');
+
+  Object.entries(cards).forEach(([m, id]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.borderColor  = m === method ? '#108A43' : 'transparent';
+    el.style.borderWidth  = '2px';
+  });
+
+  if (apps) apps.classList.toggle('hidden', method !== 'UPI');
+  Object.entries(radios).forEach(([m, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = m === method ? 'radio_button_checked' : 'radio_button_unchecked';
+  });
+
+  const btn = document.getElementById('payProceedBtn');
+  const total = cartTotal();
+  if (btn) btn.textContent = method === 'COD' ? 'Place Order with COD' : `Pay ₹${total} Securely`;
+}
+
+function selectUpiApp(app, e) {
+  e.stopPropagation();
+  state.selectedUpi = app;
+  document.querySelectorAll('.upi-app-row').forEach(row => {
+    const sel = row.dataset.app === app;
+    row.style.background = sel ? '#E6F5EC' : '';
+    row.style.border = sel ? '1.5px solid #108A43' : '1.5px solid transparent';
+    const icon = row.querySelector('.ms:last-child');
+    if (icon) { icon.textContent = sel ? 'radio_button_checked' : 'radio_button_unchecked'; icon.style.color = sel ? '#108A43' : '#A1A1AA'; }
+  });
+}
+
+const PROCESSING_STEPS = [
+  'Establishing secure 256-bit SSL connection…',
+  'Sending authorization payload to tokenization manager…',
+  'Authenticating transaction with your central bank…',
+  'Payment processed! Creating your order… ✓',
+];
+
+function proceedPayment() {
+  const sel  = document.getElementById('paymentSelection');
+  const proc = document.getElementById('paymentProcessing');
+  const back = document.getElementById('payBackBtn');
+  if (sel)  sel.classList.add('hidden');
+  if (proc) proc.classList.remove('hidden');
+  if (back) back.classList.add('hidden');
+
+  let step = 0;
+  const stepEl = document.getElementById('processingStep');
+  const interval = setInterval(() => {
+    if (stepEl) stepEl.textContent = PROCESSING_STEPS[step] || PROCESSING_STEPS[PROCESSING_STEPS.length-1];
+    step++;
+    if (step >= PROCESSING_STEPS.length) {
+      clearInterval(interval);
+      setTimeout(showPaymentSuccess, 800);
+    }
+  }, 1200);
+}
+
+function showPaymentSuccess() {
+  const proc = document.getElementById('paymentProcessing');
+  const succ = document.getElementById('paymentSuccess');
+  if (proc) proc.classList.add('hidden');
+  if (succ) succ.classList.remove('hidden');
+
+  // Save order
+  const total = cartTotal();
+  const addr  = state.addresses.find(a=>a.id===state.defaultAddr);
+  const orderId = Date.now();
+  const summary = Object.entries(state.cart).map(([id,qty]) => {
+    const p = PRODUCTS.find(p=>p.id===id);
+    return p ? `${qty}x ${p.name}` : '';
+  }).filter(Boolean).join(', ');
+
+  state.orders.unshift({
+    id: orderId, total, date: Date.now(),
+    status: 'Out for Delivery', summary,
+    rider: 'Rahul Kumar',
+  });
+  state.activeOrder = state.orders[0];
+  state.cart = {};
+  state.coupon = null;
+  state.discount = 0;
+  state.trackingProg = 0.15;
+  refreshFloatingCartBar();
+
+  const addrEl = document.getElementById('successAddr');
+  if (addrEl && addr) addrEl.textContent = addr.label;
+
+  // Confetti
+  const container = document.getElementById('confettiContainer');
+  if (container) {
+    const colors = ['#108A43','#F7C11E','#2196F3','#FF5722','#E91E63'];
+    for (let i = 0; i < 50; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.cssText = `
+        left:${Math.random()*100}%;
+        top:-10px;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        animation-duration:${1.5+Math.random()*2}s;
+        animation-delay:${Math.random()*0.5}s;
+        transform:rotate(${Math.random()*360}deg);
+      `;
+      container.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }
+  }
+}
+
+function goToTracking() {
+  navigate('tracking');
+}
+
+/* ════════════════════════════════════════
+   ADDRESSES
+════════════════════════════════════════ */
+function showModal(id) { document.getElementById(id).classList.remove('hidden'); renderAddressModal(); }
+function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function renderAddressModal() {
+  const list = document.getElementById('addressList');
+  if (!list) return;
+  list.innerHTML = state.addresses.map(addr => `
+    <div class="flex items-center gap-3 p-3 card cursor-pointer ${addr.id===state.defaultAddr?'outline outline-2 outline-brand':''}" onclick="selectAddr(${addr.id})">
+      <span class="ms text-brand" style="font-size:20px">location_on</span>
+      <div class="flex-1">
+        <div class="font-800 text-sm text-main">${addr.label}</div>
+        <div class="text-xs text-sub">${addr.line}, ${addr.area}</div>
+      </div>
+      ${addr.id===state.defaultAddr?`<span class="ms text-brand" style="font-size:18px">check_circle</span>`:''}
+    </div>`).join('');
+}
+
+function selectAddr(id) {
+  state.defaultAddr = id;
+  renderAddressModal();
+  updateHomeAddr();
+  showToast('Address updated ✓');
+}
+
+function addAddress() {
+  const label = document.getElementById('addrLabel').value.trim();
+  const line  = document.getElementById('addrLine').value.trim();
+  const area  = document.getElementById('addrArea').value.trim();
+  if (!label || !line) return showToast('Please fill label and address');
+  const id = Date.now();
+  state.addresses.push({ id, label, line, area });
+  state.defaultAddr = id;
+  ['addrLabel','addrLine','addrArea'].forEach(f => { document.getElementById(f).value=''; });
+  renderAddressModal();
+  updateHomeAddr();
+  hideModal('addressModal');
+  showToast('Address saved! ✓');
+}
+
+/* ════════════════════════════════════════
+   DARK MODE
+════════════════════════════════════════ */
+function toggleDark() {
+  state.dark = !state.dark;
+  document.documentElement.classList.toggle('dark', state.dark);
+  const icon = document.getElementById('darkIcon');
+  if (icon) icon.textContent = state.dark ? 'light_mode' : 'dark_mode';
+  document.querySelectorAll('.screen').forEach(s => s.style.background = state.dark ? '#18181B' : '#F6F7F9');
+}
+
+/* ════════════════════════════════════════
+   TOAST
+════════════════════════════════════════ */
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  renderHome();
+  refreshFloatingCartBar();
+});
 </script>
 </body>
 </html>

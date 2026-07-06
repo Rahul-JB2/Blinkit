@@ -62,25 +62,45 @@ fun TrackingScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Live Delivery Tracker", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
-                navigationIcon = {
+            Surface(
+                tonalElevation  = 2.dp,
+                shadowElevation = 2.dp,
+                color           = MaterialTheme.colorScheme.surface
+            ) {
+                Row(
+                    modifier          = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 4.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     IconButton(onClick = onNavigateHome) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Default.Close, contentDescription = "Close",
+                            tint = MaterialTheme.colorScheme.onSurface)
                     }
-                },
-                actions = {
+                    Text(
+                        text       = "Live Delivery Tracker",
+                        fontSize   = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color      = MaterialTheme.colorScheme.onSurface,
+                        modifier   = Modifier.weight(1f)
+                    )
+                    // Pulsing live indicator
+                    Surface(color = BrandGreen, shape = RoundedCornerShape(50)) {
+                        Text(
+                            text     = "🟢 LIVE",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color    = Color.White,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
                     IconButton(onClick = onNavigateHome) {
-                        Icon(imageVector = Icons.Default.Home, contentDescription = "Home")
+                        Icon(Icons.Default.Home, contentDescription = "Home",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
-            )
+                }
+            }
         },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier
@@ -717,18 +737,13 @@ fun NoActiveOrderView(onGoHome: () -> Unit, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.SentimentDissatisfied,
-            contentDescription = "No active order",
-            tint = Color.LightGray,
-            modifier = Modifier.size(80.dp)
-        )
+        Text("🛵", fontSize = 72.sp)
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "No active tracking orders!",
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            color = BrandTextDark
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onBackground
         )
         Text(
             text = "Place an order from your checkout basket to track delivery in real-time.",
