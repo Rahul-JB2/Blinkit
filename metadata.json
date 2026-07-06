@@ -1,0 +1,6 @@
+{
+  "name": "QuickMart",
+  "description": "Hyper-local grocery delivery app with real-time order tracking and secure payment integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
