@@ -1,1 +1,0 @@
-- [HomeScreen redesign approach](homescreen-redesign.md) — dual lazy.items imports work fine; LazyVerticalGrid with span items is the pattern used for mixed-width layouts

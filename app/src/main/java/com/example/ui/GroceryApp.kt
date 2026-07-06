@@ -9,70 +9,48 @@ import androidx.navigation.compose.rememberNavController
 import com.example.ui.screens.*
 import com.example.viewmodel.GroceryViewModel
 
-const val ROUTE_HOME       = "home"
-const val ROUTE_CATEGORIES = "categories"
-const val ROUTE_SEARCH     = "search"
-const val ROUTE_CART       = "cart"
-const val ROUTE_PAYMENT    = "payment"
-const val ROUTE_TRACKING   = "tracking"
-const val ROUTE_ORDERS     = "orders"
-const val ROUTE_ADMIN      = "admin"
-const val ROUTE_CHAT       = "chat"
+const val ROUTE_HOME = "home"
+const val ROUTE_CART = "cart"
+const val ROUTE_PAYMENT = "payment"
+const val ROUTE_TRACKING = "tracking"
+const val ROUTE_ORDERS = "orders"
+const val ROUTE_ADMIN = "admin"
+const val ROUTE_CHAT = "chat"
 
 @Composable
 fun GroceryApp(
     viewModel: GroceryViewModel,
-    modifier : Modifier = Modifier
+    modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
 
     NavHost(
-        navController    = navController,
+        navController = navController,
         startDestination = ROUTE_HOME,
-        modifier         = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         composable(ROUTE_HOME) {
             HomeScreen(
-                viewModel              = viewModel,
-                onNavigateToCart       = { navController.navigate(ROUTE_CART) },
-                onNavigateToTracking   = { navController.navigate(ROUTE_TRACKING) },
-                onNavigateToOrders     = { navController.navigate(ROUTE_ORDERS) },
-                onNavigateToAdmin      = { navController.navigate(ROUTE_ADMIN) },
-                onNavigateToChat       = { navController.navigate(ROUTE_CHAT) },
-                onNavigateToCategories = { navController.navigate(ROUTE_CATEGORIES) },
-                onNavigateToSearch     = { navController.navigate(ROUTE_SEARCH) }
-            )
-        }
-
-        composable(ROUTE_CATEGORIES) {
-            CategoriesScreen(
-                viewModel              = viewModel,
-                onNavigateBack         = { navController.popBackStack() },
-                onNavigateToSearch     = { navController.navigate(ROUTE_SEARCH) },
-                onNavigateToCart       = { navController.navigate(ROUTE_CART) }
-            )
-        }
-
-        composable(ROUTE_SEARCH) {
-            SearchScreen(
-                viewModel              = viewModel,
-                onNavigateBack         = { navController.popBackStack() },
-                onNavigateToCategories = { navController.navigate(ROUTE_CATEGORIES) },
-                onNavigateToCart       = { navController.navigate(ROUTE_CART) }
+                viewModel = viewModel,
+                onNavigateToCart = { navController.navigate(ROUTE_CART) },
+                onNavigateToTracking = { navController.navigate(ROUTE_TRACKING) },
+                onNavigateToOrders = { navController.navigate(ROUTE_ORDERS) },
+                onNavigateToAdmin = { navController.navigate(ROUTE_ADMIN) },
+                onNavigateToChat = { navController.navigate(ROUTE_CHAT) }
             )
         }
 
         composable(ROUTE_CART) {
             CartScreen(
-                viewModel          = viewModel,
-                onNavigateBack     = { navController.popBackStack() },
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
                 onNavigateToPayment = { navController.navigate(ROUTE_PAYMENT) }
             )
         }
 
         composable(ROUTE_PAYMENT) {
             PaymentScreen(
-                viewModel            = viewModel,
+                viewModel = viewModel,
                 onNavigateToTracking = {
                     navController.navigate(ROUTE_TRACKING) {
                         popUpTo(ROUTE_HOME) { inclusive = false }
@@ -84,8 +62,8 @@ fun GroceryApp(
 
         composable(ROUTE_TRACKING) {
             TrackingScreen(
-                viewModel       = viewModel,
-                onNavigateHome  = {
+                viewModel = viewModel,
+                onNavigateHome = {
                     viewModel.clearActiveTracking()
                     navController.navigate(ROUTE_HOME) {
                         popUpTo(ROUTE_HOME) { inclusive = true }
@@ -96,8 +74,8 @@ fun GroceryApp(
 
         composable(ROUTE_ORDERS) {
             OrderHistoryScreen(
-                viewModel           = viewModel,
-                onNavigateBack      = { navController.popBackStack() },
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
                 onNavigateToTracking = {
                     navController.navigate(ROUTE_TRACKING) {
                         popUpTo(ROUTE_HOME) { inclusive = false }
@@ -109,14 +87,14 @@ fun GroceryApp(
         composable(ROUTE_ADMIN) {
             AdminDashboardScreen(
                 viewModel = viewModel,
-                onBack    = { navController.popBackStack() }
+                onBack = { navController.popBackStack() }
             )
         }
 
         composable(ROUTE_CHAT) {
             AIChatbotScreen(
                 viewModel = viewModel,
-                onBack    = { navController.popBackStack() }
+                onBack = { navController.popBackStack() }
             )
         }
     }

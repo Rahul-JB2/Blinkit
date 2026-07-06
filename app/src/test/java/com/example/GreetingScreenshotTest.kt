@@ -2,8 +2,6 @@ package com.example
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
-import com.example.ui.screens.EmptyProductsView
-import com.example.ui.screens.HomeBottomNav
 import com.example.ui.theme.MyApplicationTheme
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -22,30 +20,9 @@ class GreetingScreenshotTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   @Test
-  fun bottom_nav_screenshot() {
-    composeTestRule.setContent {
-      MyApplicationTheme {
-        HomeBottomNav(
-          selectedTab   = 0,
-          cartCount     = 3,
-          onTabSelected = {}
-        )
-      }
-    }
-    composeTestRule.onRoot().captureRoboImage(
-      filePath = "src/test/screenshots/bottom_nav.png"
-    )
-  }
+  fun greeting_screenshot() {
+    composeTestRule.setContent { MyApplicationTheme { Greeting("Robolectric") } }
 
-  @Test
-  fun empty_state_screenshot() {
-    composeTestRule.setContent {
-      MyApplicationTheme {
-        EmptyProductsView(query = "organic milk")
-      }
-    }
-    composeTestRule.onRoot().captureRoboImage(
-      filePath = "src/test/screenshots/empty_state.png"
-    )
+    composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/greeting.png")
   }
 }

@@ -50,41 +50,15 @@ fun CartScreen(
 
     Scaffold(
         topBar = {
-            Surface(
-                tonalElevation  = 2.dp,
-                shadowElevation = 2.dp,
-                color           = MaterialTheme.colorScheme.surface
-            ) {
-                Row(
-                    modifier          = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 4.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            TopAppBar(
+                title = { Text("Checkout basket", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Go Back",
-                            tint = MaterialTheme.colorScheme.onSurface)
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Go Back")
                     }
-                    Text(
-                        text       = "Checkout basket",
-                        fontSize   = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color      = MaterialTheme.colorScheme.onSurface,
-                        modifier   = Modifier.weight(1f)
-                    )
-                    Surface(color = BrandGreenLight, shape = RoundedCornerShape(50)) {
-                        Text(
-                            text     = "${cartItems.size} items",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color    = BrandGreenDark,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                }
-            }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
         },
         bottomBar = {
             if (cartItems.isNotEmpty()) {
@@ -664,10 +638,9 @@ fun CartItemCard(
     onDelete: () -> Unit
 ) {
     Card(
-        colors    = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape     = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier  = Modifier.fillMaxWidth()
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = CardDefaults.outlinedCardBorder(),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
@@ -777,13 +750,18 @@ fun EmptyCartView(onGoShop: () -> Unit, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("🛒", fontSize = 80.sp)
+        Icon(
+            imageVector = Icons.Default.RemoveShoppingCart,
+            contentDescription = "Empty Basket",
+            tint = Color.LightGray,
+            modifier = Modifier.size(96.dp)
+        )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "Your basket is empty!",
             fontWeight = FontWeight.ExtraBold,
             fontSize = 20.sp,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = BrandTextDark,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -797,15 +775,12 @@ fun EmptyCartView(onGoShop: () -> Unit, modifier: Modifier = Modifier) {
         Button(
             onClick = onGoShop,
             colors = ButtonDefaults.buttonColors(containerColor = BrandGreen),
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(50.dp)
         ) {
-            Icon(Icons.Default.ShoppingBag, contentDescription = null,
-                modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(text = "Start Shopping", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+            Text(text = "Start Shopping", fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
     }
 }

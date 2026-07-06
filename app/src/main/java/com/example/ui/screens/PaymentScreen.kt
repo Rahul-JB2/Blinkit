@@ -117,42 +117,23 @@ fun PaymentScreen(
 
     Scaffold(
         topBar = {
-            Surface(
-                tonalElevation  = 2.dp,
-                shadowElevation = 2.dp,
-                color           = MaterialTheme.colorScheme.surface
-            ) {
-                Row(
-                    modifier          = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 4.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.Https, contentDescription = "Secure Payment", tint = BrandGreen, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Secure Payment Gateway", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                },
+                navigationIcon = {
                     if (currentScreenState is PaymentScreenState.Selection) {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onSurface)
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                         }
-                    } else {
-                        Spacer(Modifier.width(48.dp))
                     }
-                    Row(
-                        modifier          = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Https, contentDescription = null,
-                            tint = BrandGreen, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text       = "Secure Payment Gateway",
-                            fontSize   = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color      = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
         },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier
