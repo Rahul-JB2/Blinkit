@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -181,6 +182,43 @@ fun CartScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Free Delivery Progress Banner
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = SoftGreen.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            if (subtotal >= 99.0) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Celebration, contentDescription = "Free delivery", tint = BrandGreen, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Awesome! You unlocked FREE Delivery! 🚚💨", color = BrandGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            } else {
+                                val remaining = 99.0 - subtotal
+                                Text(
+                                    text = "Add ₹${remaining.toInt()} more for FREE Delivery",
+                                    color = BrandTextDark,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                LinearProgressIndicator(
+                                    progress = { (subtotal / 99.0).toFloat().coerceIn(0f, 1f) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp)),
+                                    color = BrandGreen,
+                                    trackColor = Color.Gray.copy(alpha = 0.2f)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Cart Items Section Header
                 item {
                     Text(
@@ -199,6 +237,210 @@ fun CartScreen(
                         onDecrease = { viewModel.decreaseCartQuantity(item.product.id) },
                         onDelete = { viewModel.removeFromCart(item.product.id) }
                     )
+                }
+
+                // Smart Recommendations Section
+                item {
+                    val allProducts by viewModel.allProducts.collectAsState(initial = emptyList())
+                    val cartProductIds = cartItems.map { it.product.id }.toSet()
+                    val recommended = allProducts.filter { it.id !in cartProductIds }.take(4)
+
+                    if (recommended.isNotEmpty()) {
+                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = "Recommendations",
+                                        tint = BrandYellow,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Smart Recommendations",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                Text(
+                                    text = "Synced Offline",
+                                    fontSize = 10.sp,
+                                    color = BrandGreen,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(recommended, key = { it.id }) { prod ->
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = CardDefaults.outlinedCardBorder(),
+                                        modifier = Modifier
+                                            .width(140.dp)
+                                            .clickable { viewModel.addToCart(prod.id) }
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(80.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(if (MaterialTheme.colorScheme.background == BrandDark) Color(0xFF1E293B) else Color(0xFFFAFAF9)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                AsyncImage(
+                                                    model = ImageRequest.Builder(LocalContext.current)
+                                                        .data(prod.imageUrl)
+                                                        .crossfade(true)
+                                                        .build(),
+                                                    contentDescription = prod.name,
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = prod.name,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(text = prod.weight, fontSize = 10.sp, color = Color.Gray)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "₹${prod.price.toInt()}",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Surface(
+                                                    onClick = { viewModel.addToCart(prod.id) },
+                                                    color = SoftGreen,
+                                                    shape = RoundedCornerShape(6.dp),
+                                                    modifier = Modifier.height(24.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "+ ADD",
+                                                        color = BrandGreen,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Coupon Input section
+                item {
+                    val appliedCoupon by viewModel.appliedCoupon.collectAsState()
+                    val discount by viewModel.discount.collectAsState()
+                    var couponInput by remember { mutableStateOf("") }
+                    var applyError by remember { mutableStateOf(false) }
+
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        border = CardDefaults.outlinedCardBorder(),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Text(
+                                text = "Coupons & Discounts",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = BrandTextDark
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            if (appliedCoupon != null) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(SoftGreen, RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.ConfirmationNumber, contentDescription = "Coupon", tint = BrandGreen, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(text = "Code '$appliedCoupon' Applied! (-₹${discount.toInt()})", color = BrandGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Text(
+                                        text = "REMOVE",
+                                        color = Color.Red,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        modifier = Modifier.clickable { viewModel.removeCoupon() }
+                                    )
+                                }
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = couponInput,
+                                        onValueChange = {
+                                            couponInput = it
+                                            applyError = false
+                                        },
+                                        placeholder = { Text("Enter coupon (e.g. AI3DPROMO)") },
+                                        singleLine = true,
+                                        textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = BrandGreen,
+                                            unfocusedBorderColor = Color(0xFFE4E4E7)
+                                        ),
+                                        modifier = Modifier.weight(1.3f)
+                                    )
+
+                                    Button(
+                                        onClick = {
+                                            val success = viewModel.applyCoupon(couponInput)
+                                            if (success) {
+                                                couponInput = ""
+                                                applyError = false
+                                            } else {
+                                                applyError = true
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = BrandGreen),
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp),
+                                        modifier = Modifier.height(48.dp)
+                                    ) {
+                                        Text("APPLY", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    }
+                                }
+                                if (applyError) {
+                                    Text(text = "Invalid code! Try spinning the rewards wheel or use 'AI3DPROMO'", color = Color.Red, fontSize = 10.sp, modifier = Modifier.padding(top = 4.dp))
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // Billing Details
@@ -277,6 +519,28 @@ fun CartScreen(
                                     Text(text = "Handling & Packing Charge", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 Text(text = "₹${String.format("%.2f", handlingFee)}", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                            }
+
+                            val appliedCoupon by viewModel.appliedCoupon.collectAsState()
+                            val discount by viewModel.discount.collectAsState()
+                            if (appliedCoupon != null && discount > 0.0) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.ConfirmationNumber,
+                                            contentDescription = "Discount",
+                                            tint = BrandGreen,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(text = "Promo Discount ($appliedCoupon)", fontSize = 13.sp, color = BrandGreen, fontWeight = FontWeight.Bold)
+                                    }
+                                    Text(text = "-₹${String.format("%.2f", discount)}", fontSize = 13.sp, color = BrandGreen, fontWeight = FontWeight.Bold)
+                                }
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))

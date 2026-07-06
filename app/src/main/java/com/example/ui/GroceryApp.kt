@@ -14,6 +14,8 @@ const val ROUTE_CART = "cart"
 const val ROUTE_PAYMENT = "payment"
 const val ROUTE_TRACKING = "tracking"
 const val ROUTE_ORDERS = "orders"
+const val ROUTE_ADMIN = "admin"
+const val ROUTE_CHAT = "chat"
 
 @Composable
 fun GroceryApp(
@@ -32,7 +34,9 @@ fun GroceryApp(
                 viewModel = viewModel,
                 onNavigateToCart = { navController.navigate(ROUTE_CART) },
                 onNavigateToTracking = { navController.navigate(ROUTE_TRACKING) },
-                onNavigateToOrders = { navController.navigate(ROUTE_ORDERS) }
+                onNavigateToOrders = { navController.navigate(ROUTE_ORDERS) },
+                onNavigateToAdmin = { navController.navigate(ROUTE_ADMIN) },
+                onNavigateToChat = { navController.navigate(ROUTE_CHAT) }
             )
         }
 
@@ -77,6 +81,20 @@ fun GroceryApp(
                         popUpTo(ROUTE_HOME) { inclusive = false }
                     }
                 }
+            )
+        }
+
+        composable(ROUTE_ADMIN) {
+            AdminDashboardScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(ROUTE_CHAT) {
+            AIChatbotScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
             )
         }
     }

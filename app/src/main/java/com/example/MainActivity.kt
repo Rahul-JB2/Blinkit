@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.ViewModelProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.example.data.AppDatabase
 import com.example.repository.GroceryRepository
 import com.example.ui.GroceryApp
@@ -26,7 +28,8 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
+            val isDark by viewModel.isDarkTheme.collectAsState()
+            MyApplicationTheme(darkTheme = isDark) {
                 GroceryApp(viewModel = viewModel)
             }
         }

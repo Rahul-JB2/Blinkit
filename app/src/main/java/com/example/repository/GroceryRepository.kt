@@ -278,6 +278,18 @@ class GroceryRepository(private val database: AppDatabase) {
         cartDao.deleteByProductId(productId)
     }
 
+    suspend fun updateProductStock(productId: String, stock: Int) {
+        val products = allProducts.firstOrNull() ?: emptyList()
+        val product = products.find { it.id == productId }
+        if (product != null) {
+            productDao.insertAll(listOf(product.copy(stock = stock)))
+        }
+    }
+
+    suspend fun insertProduct(product: ProductEntity) {
+        productDao.insertAll(listOf(product))
+    }
+
     suspend fun clearCart() {
         cartDao.clearCart()
     }

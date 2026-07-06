@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asAndroidPath
 import com.example.data.OrderEntity
 import com.example.ui.theme.*
@@ -43,6 +45,9 @@ fun TrackingScreen(
     modifier: Modifier = Modifier
 ) {
     val activeOrder by viewModel.activeOrder.collectAsState()
+    var zoomScale by remember { mutableStateOf(1.0f) }
+    var isSatelliteMode by remember { mutableStateOf(false) }
+    val firebaseListenerLogs by viewModel.firebaseListenerLogs.collectAsState()
 
     // Pulse animation for markers
     var pulseValue by remember { mutableStateOf(0f) }
@@ -69,7 +74,12 @@ fun TrackingScreen(
                         Icon(imageVector = Icons.Default.Home, contentDescription = "Home")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
@@ -92,12 +102,81 @@ fun TrackingScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1.1f)
-                        .background(Color(0xFFE2E8F0)) // slate light road background
+                        .background(if (isSatelliteMode) Color(0xFF131C16) else Color(0xFFE2E8F0))
                 ) {
                     MapCanvas(
                         progress = order.trackingProgress,
-                        pulse = pulseValue
+                        pulse = pulseValue,
+                        zoomScale = zoomScale,
+                        isSatelliteMode = isSatelliteMode
                     )
+
+                    // Floating Zoom Controls (+ / -) in Column
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { zoomScale = (zoomScale + 0.15f).coerceAtMost(1.8f) },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Zoom In", tint = MaterialTheme.colorScheme.onSurface)
+                        }
+                        IconButton(
+                            onClick = { zoomScale = (zoomScale - 0.15f).coerceAtLeast(0.6f) },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+                        ) {
+                            Icon(Icons.Default.Remove, contentDescription = "Zoom Out", tint = MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+
+                    // Floating "Center on Rider" & "Layer Toggle"
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = { isSatelliteMode = !isSatelliteMode },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                        ) {
+                            Icon(
+                                imageVector = if (isSatelliteMode) Icons.Default.LightMode else Icons.Default.Layers,
+                                contentDescription = "Map Layers",
+                                tint = BrandGreen
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { zoomScale = 1.25f }, // reset zoom & center
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MyLocation,
+                                contentDescription = "Center Rider",
+                                tint = BrandYellow
+                            )
+                        }
+                    }
 
                     // Overlay Floating ETA Badge
                     Surface(
@@ -135,7 +214,7 @@ fun TrackingScreen(
 
                 // Delivery Status Info (Takes 60% height)
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                     modifier = Modifier
@@ -156,6 +235,11 @@ fun TrackingScreen(
                                 progress = order.trackingProgress,
                                 orderStatus = order.status
                             )
+                        }
+
+                        // Real-time Firebase Listener live console terminal logs
+                        item {
+                            LiveTerminalLogs(logs = firebaseListenerLogs)
                         }
 
                         // Order info divider
@@ -219,33 +303,76 @@ fun TrackingScreen(
 }
 
 @Composable
-fun MapCanvas(progress: Float, pulse: Float) {
+fun MapCanvas(
+    progress: Float,
+    pulse: Float,
+    zoomScale: Float,
+    isSatelliteMode: Boolean
+) {
     Canvas(modifier = Modifier.fillMaxSize()) {
         val width = size.width
         val height = size.height
 
-        // Define stores and home positions
-        val storeX = width * 0.18f
-        val storeY = height * 0.35f
+        val mapCenterX = width / 2f
+        val mapCenterY = height / 2f
 
-        val userX = width * 0.82f
-        val userY = height * 0.65f
+        // Define stores and home positions (scaled by zoom)
+        val baseStoreX = width * 0.18f
+        val baseStoreY = height * 0.35f
+        val baseUserX = width * 0.82f
+        val baseUserY = height * 0.65f
+
+        val storeX = mapCenterX + (baseStoreX - mapCenterX) * zoomScale
+        val storeY = mapCenterY + (baseStoreY - mapCenterY) * zoomScale
+        val userX = mapCenterX + (baseUserX - mapCenterX) * zoomScale
+        val userY = mapCenterY + (baseUserY - mapCenterY) * zoomScale
+
+        // Draw Map Background based on layer
+        if (isSatelliteMode) {
+            drawRect(color = Color(0xFF131C16)) // Dark forest/military green
+            
+            // Draw Lake (Water polygon)
+            val waterPath = Path().apply {
+                moveTo(width * 0.4f, height * 0.1f)
+                lineTo(width * 0.6f, height * 0.12f)
+                lineTo(width * 0.55f, height * 0.28f)
+                lineTo(width * 0.38f, height * 0.25f)
+                close()
+            }
+            drawPath(path = waterPath, color = Color(0xFF006B7F))
+            
+            // Draw Park Area
+            drawRect(
+                color = Color(0xFF0F4D2B),
+                topLeft = Offset(width * 0.1f, height * 0.7f),
+                size = Size(width * 0.25f, height * 0.22f)
+            )
+        } else {
+            drawRect(color = Color(0xFFE2E8F0)) // Light gray-slate
+            
+            // Draw standard blue river
+            val waterPath = Path().apply {
+                moveTo(0f, height * 0.15f)
+                cubicTo(width * 0.3f, height * 0.1f, width * 0.6f, height * 0.3f, width, height * 0.2f)
+            }
+            drawPath(path = waterPath, color = Color(0xFFBAE6FD), style = Stroke(width = 40f))
+        }
 
         // Draw basic streets grid in background
-        val streetPaint = Color.White.copy(alpha = 0.5f)
-        drawLine(streetPaint, Offset(0f, height * 0.2f), Offset(width, height * 0.2f), strokeWidth = 32f)
-        drawLine(streetPaint, Offset(0f, height * 0.5f), Offset(width, height * 0.5f), strokeWidth = 32f)
-        drawLine(streetPaint, Offset(0f, height * 0.8f), Offset(width, height * 0.8f), strokeWidth = 32f)
+        val streetPaint = if (isSatelliteMode) Color(0xFF334155) else Color.White
+        drawLine(streetPaint, Offset(0f, height * 0.2f), Offset(width, height * 0.2f), strokeWidth = 28f)
+        drawLine(streetPaint, Offset(0f, height * 0.5f), Offset(width, height * 0.5f), strokeWidth = 28f)
+        drawLine(streetPaint, Offset(0f, height * 0.8f), Offset(width, height * 0.8f), strokeWidth = 28f)
 
-        drawLine(streetPaint, Offset(width * 0.3f, 0f), Offset(width * 0.3f, height), strokeWidth = 32f)
-        drawLine(streetPaint, Offset(width * 0.7f, 0f), Offset(width * 0.7f, height), strokeWidth = 32f)
+        drawLine(streetPaint, Offset(width * 0.3f, 0f), Offset(width * 0.3f, height), strokeWidth = 28f)
+        drawLine(streetPaint, Offset(width * 0.7f, 0f), Offset(width * 0.7f, height), strokeWidth = 28f)
 
         // Bezier curved road connecting store to user
         val curvedPath = Path().apply {
             moveTo(storeX, storeY)
             cubicTo(
-                width * 0.45f, height * 0.25f,
-                width * 0.55f, height * 0.75f,
+                mapCenterX + (width * 0.45f - mapCenterX) * zoomScale, mapCenterY + (height * 0.25f - mapCenterY) * zoomScale,
+                mapCenterX + (width * 0.55f - mapCenterX) * zoomScale, mapCenterY + (height * 0.75f - mapCenterY) * zoomScale,
                 userX, userY
             )
         }
@@ -253,9 +380,9 @@ fun MapCanvas(progress: Float, pulse: Float) {
         // Draw dotted roadmap
         drawPath(
             path = curvedPath,
-            color = Color.LightGray,
+            color = if (isSatelliteMode) Color(0xFF475569) else Color.LightGray,
             style = Stroke(
-                width = 10f,
+                width = 12f,
                 cap = StrokeCap.Round,
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
             )
@@ -268,13 +395,13 @@ fun MapCanvas(progress: Float, pulse: Float) {
         val pos = FloatArray(2)
         val tan = FloatArray(2)
 
-        if (progress > 0.01f) {
+        if (progress > 0.01f && length > 0) {
             val partialPath = Path()
             pathMeasure.getSegment(0f, length * progress, partialPath.asAndroidPath(), true)
             drawPath(
                 path = partialPath,
                 color = BrandGreen,
-                style = Stroke(width = 10f, cap = StrokeCap.Round)
+                style = Stroke(width = 12f, cap = StrokeCap.Round)
             )
         }
 
@@ -286,36 +413,136 @@ fun MapCanvas(progress: Float, pulse: Float) {
         // Pulsing background rings for store & rider
         val pulseRadiusStore = 24f + pulse * 14f
         drawCircle(
-            color = BrandGreen.copy(alpha = 0.2f),
+            color = BrandGreen.copy(alpha = 0.25f),
             radius = pulseRadiusStore,
             center = Offset(storeX, storeY)
         )
 
         val pulseRadiusUser = 24f + pulse * 14f
         drawCircle(
-            color = Color.Red.copy(alpha = 0.2f),
+            color = Color.Red.copy(alpha = 0.25f),
             radius = pulseRadiusUser,
             center = Offset(userX, userY)
         )
 
         // Draw Store Marker
-        drawCircle(color = BrandGreen, radius = 14f, center = Offset(storeX, storeY))
+        drawCircle(color = BrandGreen, radius = 16f, center = Offset(storeX, storeY))
         drawCircle(color = Color.White, radius = 6f, center = Offset(storeX, storeY))
 
         // Draw User Delivery Pin Marker
-        drawCircle(color = Color.Red, radius = 14f, center = Offset(userX, userY))
+        drawCircle(color = Color.Red, radius = 16f, center = Offset(userX, userY))
         drawCircle(color = Color.White, radius = 6f, center = Offset(userX, userY))
 
         // Draw rider dot
         if (progress < 1.0f) {
-            val pulseRadiusRider = 20f + pulse * 10f
+            val pulseRadiusRider = 22f + pulse * 12f
             drawCircle(
-                color = BrandYellow.copy(alpha = 0.4f),
+                color = BrandYellow.copy(alpha = 0.45f),
                 radius = pulseRadiusRider,
                 center = Offset(riderX, riderY)
             )
-            drawCircle(color = BrandYellow, radius = 16f, center = Offset(riderX, riderY))
+            drawCircle(color = BrandYellow, radius = 18f, center = Offset(riderX, riderY))
             drawCircle(color = BrandDark, radius = 8f, center = Offset(riderX, riderY))
+        }
+    }
+}
+
+@Composable
+fun LiveTerminalLogs(logs: List<String>) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = if (isExpanded) Color(0xFF020617) else Color(0xFF1E293B)),
+        shape = RoundedCornerShape(12.dp),
+        border = CardDefaults.outlinedCardBorder(),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.WifiTethering,
+                        contentDescription = "Firebase Connection Status",
+                        tint = BrandGreen,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Firebase Live Connection Status",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        color = Color.White
+                    )
+                }
+                Surface(
+                    color = Color.Green.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(Color.Green)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "CONNECTED",
+                            color = Color.Green,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .background(Color.Black)
+                        .border(1.dp, Color.DarkGray, RoundedCornerShape(4.dp))
+                        .padding(8.dp)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(logs) { log ->
+                            Text(
+                                text = log,
+                                color = if (log.contains("Error") || log.contains("failed")) Color.Red else Color.Green,
+                                fontSize = 9.sp,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Latency: 24ms • REST sync fallback: active",
+                    fontSize = 8.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Tap to expand real-time Firebase listener logs",
+                    fontSize = 10.sp,
+                    color = Color.LightGray
+                )
+            }
         }
     }
 }

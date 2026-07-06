@@ -33,7 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.BorderStroke
+import kotlinx.coroutines.delay
 import com.example.data.AddressEntity
 import com.example.data.ProductEntity
 import com.example.ui.theme.*
@@ -46,6 +49,8 @@ fun HomeScreen(
     onNavigateToCart: () -> Unit,
     onNavigateToTracking: () -> Unit,
     onNavigateToOrders: () -> Unit,
+    onNavigateToAdmin: () -> Unit,
+    onNavigateToChat: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val selectedCategory by viewModel.selectedCategory.collectAsState()
@@ -56,6 +61,26 @@ fun HomeScreen(
     val activeOrder by viewModel.activeOrder.collectAsState()
 
     var showAddressSheet by remember { mutableStateOf(false) }
+    var showSpinWheel by remember { mutableStateOf(false) }
+    var selectedDetailsProduct by remember { mutableStateOf<ProductEntity?>(null) }
+
+    val isDark by viewModel.isDarkTheme.collectAsState()
+
+    // Dynamic Search Placeholders Cycle
+    val searchPlaceholders = listOf(
+        "Search \"fresh organic tomatoes\"...",
+        "Search \"cold-pressed orange juice\"...",
+        "Search \"salted amul butter\"...",
+        "Search \"whole wheat brown bread\"...",
+        "Search \"monsoon crunch potato chips\"..."
+    )
+    var currentPlaceholderIdx by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(3000)
+            currentPlaceholderIdx = (currentPlaceholderIdx + 1) % searchPlaceholders.size
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -97,6 +122,36 @@ fun HomeScreen(
                 },
                 actions = {
                     IconButton(
+                        onClick = { viewModel.toggleTheme() },
+                        modifier = Modifier.testTag("theme_switch_button")
+                    ) {
+                        Icon(
+                            imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = "Switch Theme",
+                            tint = if (isDark) BrandYellow else BrandGreen
+                        )
+                    }
+                    IconButton(
+                        onClick = onNavigateToAdmin,
+                        modifier = Modifier.testTag("admin_dashboard_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Admin Operations",
+                            tint = BrandGreen
+                        )
+                    }
+                    IconButton(
+                        onClick = { showSpinWheel = true },
+                        modifier = Modifier.testTag("loyalty_rewards_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Casino,
+                            contentDescription = "Spin & Win Game",
+                            tint = BrandYellow
+                        )
+                    }
+                    IconButton(
                         onClick = onNavigateToOrders,
                         modifier = Modifier.testTag("orders_history_button")
                     ) {
@@ -108,8 +163,8 @@ fun HomeScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    scrolledContainerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
@@ -177,6 +232,21 @@ fun HomeScreen(
                 }
             }
         },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onNavigateToChat,
+                containerColor = BrandGreen,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier
+                    .padding(bottom = if (cartItems.isNotEmpty()) 80.dp else 0.dp)
+                    .testTag("ai_chatbot_fab")
+            ) {
+                Icon(Icons.Default.Android, contentDescription = "AI Assistant")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("AI Assistant", fontWeight = FontWeight.Black, fontSize = 13.sp)
+            }
+        },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier
     ) { innerPadding ->
@@ -189,7 +259,7 @@ fun HomeScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.setSearchQuery(it) },
-                placeholder = { Text("Search \"fresh bread\", \"tomato\" or \"chips\"...") },
+                placeholder = { Text(searchPlaceholders[currentPlaceholderIdx]) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -206,8 +276,8 @@ fun HomeScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = BrandGreen,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 ),
                 singleLine = true
             )
@@ -277,9 +347,12 @@ fun HomeScreen(
                 text = "Browse Categories",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = BrandTextDark,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
+
+            val allCategoriesList = listOf("All") + viewModel.categories
+            val selectedIndex = allCategoriesList.indexOf(selectedCategory).coerceAtLeast(0)
 
             LazyRow(
                 modifier = Modifier
@@ -288,20 +361,13 @@ fun HomeScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // "All" Category
-                item {
-                    CategoryChip(
-                        categoryName = "All",
-                        isSelected = selectedCategory == "All",
-                        onClick = { viewModel.selectCategory("All") }
-                    )
-                }
-
-                items(viewModel.categories) { category ->
+                itemsIndexed(allCategoriesList) { index, category ->
                     CategoryChip(
                         categoryName = category,
                         isSelected = selectedCategory == category,
-                        onClick = { viewModel.selectCategory(category) }
+                        onClick = { viewModel.selectCategory(category) },
+                        index = index,
+                        selectedIndex = selectedIndex
                     )
                 }
             }
@@ -332,6 +398,7 @@ fun HomeScreen(
                             quantityInCart = cartQty,
                             onAddToCart = { viewModel.addToCart(product.id) },
                             onDecreaseQty = { viewModel.decreaseCartQuantity(product.id) },
+                            onProductClick = { selectedDetailsProduct = product },
                             modifier = Modifier.testTag("product_card_${product.id}")
                         )
                     }
@@ -347,21 +414,48 @@ fun HomeScreen(
             onDismiss = { showAddressSheet = false }
         )
     }
+
+    // Daily Rewards Spin Wheel Dialog
+    if (showSpinWheel) {
+        SpinWheelDialog(
+            viewModel = viewModel,
+            onDismiss = { showSpinWheel = false }
+        )
+    }
+
+    // Interactive Product Details Dialog
+    selectedDetailsProduct?.let { product ->
+        ProductDetailsDialog(
+            product = product,
+            onDismiss = { selectedDetailsProduct = null },
+            onAddToCart = { viewModel.addToCart(product.id) }
+        )
+    }
 }
 
 @Composable
 fun PromotionalBanner(modifier: Modifier = Modifier) {
+    var activeSlide by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(4000)
+            activeSlide = (activeSlide + 1) % 3
+        }
+    }
+
+    val gradientColors = when (activeSlide) {
+        0 -> listOf(BrandGreen, Color(0xFF004D20)) // Emerald to forest deep
+        1 -> listOf(Color(0xFF6366F1), Color(0xFF312E81)) // Indigo to deep navy
+        else -> listOf(Color(0xFFF59E0B), Color(0xFFB45309)) // Amber to burnt bronze
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(130.dp)
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(BrandGreen, Color(0xFF2E7D32))
-                )
-            )
+            .clip(RoundedCornerShape(20.dp))
+            .background(Brush.horizontalGradient(colors = gradientColors))
     ) {
         Row(
             modifier = Modifier
@@ -377,23 +471,23 @@ fun PromotionalBanner(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(bottom = 6.dp)
                 ) {
                     Text(
-                        text = "10 MINS DELIVERY",
+                        text = if (activeSlide == 0) "10 MINS DELIVERY" else if (activeSlide == 1) "MEGA BOGO OFFER" else "CRUNCH FESTIVAL",
                         color = Color.Black,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
                 Text(
-                    text = "Grab Fresh Groceries",
+                    text = if (activeSlide == 0) "Grab Fresh Groceries" else if (activeSlide == 1) "Breakfast Festival" else "Snacks & Munchies",
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Black
                 )
                 Text(
-                    text = "Up to 30% OFF on fresh vegetables",
-                    color = Color.White.copy(alpha = 0.85f),
-                    fontSize = 12.sp,
+                    text = if (activeSlide == 0) "Up to 30% OFF on fresh vegetables" else if (activeSlide == 1) "Buy 1 Get 1 FREE on Milk & Eggs" else "Flat 20% OFF using AI3DPROMO",
+                    color = Color.White.copy(alpha = 0.9f),
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -403,12 +497,11 @@ fun PromotionalBanner(modifier: Modifier = Modifier) {
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
-                // Simple high quality grocery icon
                 Icon(
-                    imageVector = Icons.Default.ShoppingBag,
-                    contentDescription = "Offer Banner",
+                    imageVector = if (activeSlide == 0) Icons.Default.ShoppingBag else if (activeSlide == 1) Icons.Default.BreakfastDining else Icons.Default.Fastfood,
+                    contentDescription = "Offer Banner Icon",
                     tint = BrandYellow.copy(alpha = 0.9f),
-                    modifier = Modifier.size(72.dp)
+                    modifier = Modifier.size(64.dp)
                 )
             }
         }
@@ -419,25 +512,52 @@ fun PromotionalBanner(modifier: Modifier = Modifier) {
 fun CategoryChip(
     categoryName: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    index: Int,
+    selectedIndex: Int
 ) {
+    val relativeOffset = index - selectedIndex
+    val scale = if (isSelected) 1.12f else 0.95f
+    val rotationY = relativeOffset * 12f // 3D cylinder rotating effect!
+    
     Surface(
         onClick = onClick,
-        color = if (isSelected) BrandGreen else Color.White,
+        color = if (isSelected) BrandGreen else MaterialTheme.colorScheme.surface,
         border = BorderStroke(
-            width = 1.dp,
-            color = if (isSelected) BrandGreen else BorderColor
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) BrandYellow else BorderColor
         ),
         shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.testTag("category_chip_$categoryName")
+        shadowElevation = if (isSelected) 8.dp else 2.dp,
+        modifier = Modifier
+            .testTag("category_chip_$categoryName")
+            .graphicsLayer {
+                this.scaleX = scale
+                this.scaleY = scale
+                this.rotationY = rotationY
+                this.cameraDistance = 8f * density
+            }
     ) {
-        Text(
-            text = categoryName,
-            color = if (isSelected) Color.White else BrandTextDark,
-            fontSize = 13.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            val emoji = when (categoryName) {
+                "All" -> "🛒"
+                "Fruits & Vegetables" -> "🍎"
+                "Dairy, Bread & Eggs" -> "🥛"
+                "Munchies & Snacks" -> "🍿"
+                else -> "📦"
+            }
+            Text(text = emoji, fontSize = 15.sp)
+            Text(
+                text = categoryName,
+                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                fontSize = 12.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+            )
+        }
     }
 }
 
@@ -447,15 +567,17 @@ fun ProductCard(
     quantityInCart: Int,
     onAddToCart: () -> Unit,
     onDecreaseQty: () -> Unit,
+    onProductClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(12.dp),
         border = CardDefaults.outlinedCardBorder(),
         modifier = modifier
             .fillMaxWidth()
             .height(260.dp)
+            .clickable { onProductClick() }
     ) {
         Column(
             modifier = Modifier
@@ -468,7 +590,7 @@ fun ProductCard(
                     .fillMaxWidth()
                     .height(110.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFFAFAF9)),
+                    .background(if (MaterialTheme.colorScheme.background == BrandDark) Color(0xFF1E293B) else Color(0xFFFAFAF9)),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -515,7 +637,7 @@ fun ProductCard(
                 text = product.name,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = BrandTextDark,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 16.sp,
@@ -536,7 +658,7 @@ fun ProductCard(
                             text = "₹${product.price.toInt()}",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = BrandTextDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         if (product.originalPrice > product.price) {
                             Spacer(modifier = Modifier.width(4.dp))
